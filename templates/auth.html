@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HomeServe - Customer</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --primary: #4f46e5; --primary-hover: #4338ca;
+    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    --text-main: #1e293b; --text-muted: #64748b;
+    --white: #ffffff; --border: #e2e8f0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg-gradient);
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; padding: 20px;
+}
+
+/* 🔔 Toast Container - CENTERED ONCE, NEVER ANIMATED */
+#toastContainer {
+    position: fixed; top: 30px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999; width: 90%; max-width: 420px;
+    pointer-events: none; display: flex; flex-direction: column; align-items: center;
+}
+
+/* 🔔 Toast Message - NO TRANSFORM, ZERO SHAKE */
+.toast-msg {
+    width: 100%; padding: 14px 18px; margin: 6px 0; border-radius: 12px;
+    font-size: 14px; font-weight: 600; text-align: center;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    background: var(--white); border-left: 5px solid var(--primary);
+    pointer-events: auto;
+    opacity: 0; transform: translateY(-15px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.toast-msg.visible { opacity: 1; transform: translateY(0); }
+.toast-msg.success { border-left-color: #22c55e; background: #f0fdf4; color: #166534; }
+.toast-msg.danger  { border-left-color: #ef4444; background: #fef2f2; color: #991b1b; }
+.toast-msg.warning { border-left-color: #f59e0b; background: #fffbeb; color: #92400e; }
+
+.main-wrapper {
+    display: flex; width: 900px; max-width: 95%;
+    border-radius: 24px; overflow: hidden;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+}
+.left-side {
+    width: 50%;
+    background: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c') center/cover;
+    position: relative;
+}
+.left-side::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(79,70,229,0.85), rgba(0,0,0,0.7));
+}
+.left-content {
+    position: relative; color: white; padding: 40px;
+    top: 50%; transform: translateY(-50%);
+}
+.left-content h1 { font-size: 32px; margin-bottom: 8px; }
+.left-content p { font-size: 14px; opacity: 0.95; line-height: 1.5; }
+
+.container {
+    background: var(--white); padding: 40px; width: 50%;
+    display: flex; flex-direction: column; justify-content: center;
+}
+.logo { text-align: center; margin-bottom: 24px; }
+.logo-text { font-size: 24px; font-weight: 700; color: var(--primary); }
+.subtitle { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+
+form { display: none; }
+form.active { display: block; animation: fadeSlide 0.3s ease; }
+@keyframes fadeSlide {
+    from { opacity: 0; transform: translateX(10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+.input-group { margin-bottom: 16px; }
+label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-main); }
+.input-wrapper { position: relative; }
+input {
+    width: 100%; padding: 12px 14px; padding-right: 36px;
+    border: 1.5px solid var(--border); border-radius: 12px;
+    background: #f9fafb; font-size: 14px; transition: all 0.2s ease;
+}
+input:focus { border-color: var(--primary); outline: none; }
+.toggle-password {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; font-size: 16px; z-index: 2;
+}
+button[type="submit"] {
+    width: 100%; padding: 14px; background: var(--primary);
+    color: white; border: none; border-radius: 12px;
+    font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 8px;
+}
+button[type="submit"]:hover { background: var(--primary-hover); }
+.switch {
+    text-align: center; margin-top: 20px;
+    font-size: 14px; color: var(--text-muted);
+}
+.switch span { color: var(--primary); cursor: pointer; font-weight: 600; }
+.switch span:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<!-- 🔔 Toast Container -->
+<div id="toastContainer"></div>
+
+<div class="main-wrapper">
+    <div class="left-side">
+        <div class="left-content">
+            <h1>HomeServe</h1>
+            <p id="leftText">Your trusted home service partner.<br>Book, track, and rate professionals in minutes.</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="logo">
+            <div class="logo-text">HomeServe</div>
+            <div class="subtitle" id="subtitle">Welcome back! Please enter your details.</div>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form id="loginForm" class="active" method="POST" action="/login">
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" name="email" required placeholder="you@example.com">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <div class="input-wrapper">
+                    <input type="password" id="loginPass" name="password" required placeholder="••••••••">
+                    <button type="button" class="toggle-password" onclick="toggle('loginPass')">👁️</button>
+                </div>
+            </div>
+            <button type="submit">Sign In</button>
+            <div class="switch">New here? <span onclick="showForm('register')">Create account</span></div>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="registerForm" method="POST" action="/register">
+            <div class="input-group">
+                <label>Full Name</label>
+                <input type="text" name="full_name" required placeholder="John Doe">
+            </div>
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" name="email" required placeholder="you@example.com">
+            </div>
+            <div class="input-group">
+                <label>Phone</label>
+                <input type="tel" name="phone" placeholder="+1 555 123 4567">
+            </div>
+            <div class="input-group">
+                <label>Service Area</label>
+                <input type="text" name="area" required placeholder="e.g., Downtown">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <div class="input-wrapper">
+                    <input type="password" id="regPass" name="password" required placeholder="Min. 6 characters" minlength="6">
+                    <button type="button" class="toggle-password" onclick="toggle('regPass')">👁️</button>
+                </div>
+            </div>
+            <button type="submit">Create Account</button>
+            <div class="switch">Have an account? <span onclick="showForm('login')">Sign in</span></div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Toggle password visibility
+function toggle(id) {
+    const inp = document.getElementById(id);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// Switch between forms
+function showForm(type) {
+    const login = document.getElementById('loginForm');
+    const reg = document.getElementById('registerForm');
+    const active = login.classList.contains('active') ? login : reg;
+    active.style.opacity = '0';
+    setTimeout(() => {
+        if (type === 'register') {
+            login.classList.remove('active'); reg.classList.add('active');
+            document.getElementById('subtitle').textContent = "Join our community";
+            document.getElementById('leftText').innerHTML = "Get started today<br>Book or offer services";
+        } else {
+            reg.classList.remove('active'); login.classList.add('active');
+            document.getElementById('subtitle').textContent = "Welcome back!";
+            document.getElementById('leftText').innerHTML = "Your trusted home service partner";
+        }
+        document.querySelector('form.active').style.opacity = '1';
+    }, 200);
+}
+
+// ✅ BIG, ATTRACTIVE TOAST (Rectangular Card Style - Same as worker pages)
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    
+    const styles = {
+        success: { 
+            bg: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', 
+            border: '#22c55e', 
+            text: '#166534', 
+            icon: 'circle-check',
+            shadow: '0 8px 25px rgba(34, 197, 94, 0.25)'
+        },
+        error: { 
+            bg: 'linear-gradient(135deg, #fef2f2, #fee2e2)', 
+            border: '#ef4444', 
+            text: '#b91c1c', 
+            icon: 'circle-xmark',
+            shadow: '0 8px 25px rgba(239, 68, 68, 0.25)'
+        },
+        warning: { 
+            bg: 'linear-gradient(135deg, #fffbeb, #fef3c7)', 
+            border: '#f59e0b', 
+            text: '#92400e', 
+            icon: 'triangle-exclamation',
+            shadow: '0 8px 25px rgba(245, 158, 11, 0.25)'
+        }
+    };
+    const style = styles[type] || styles.success;
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast-card ' + type;
+    toast.style.cssText = `
+        width: 100%; max-width: 480px;
+        padding: 20px 24px;
+        margin: 8px 0;
+        border-radius: 16px;
+        background: ${style.bg};
+        border-left: 5px solid ${style.border};
+        color: ${style.text};
+        font-size: 16px;
+        font-weight: 700;
+        text-align: center;
+        box-shadow: ${style.shadow};
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        pointer-events: auto;
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    `;
+    toast.innerHTML = `
+        <i class="fas fa-${style.icon}" style="font-size: 22px;"></i>
+        <span style="flex: 1;">${message}</span>
+    `;
+    container.appendChild(toast);
+    
+    // Trigger animation
+    void toast.offsetWidth;
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+// Handle form submissions with AJAX
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn ? submitBtn.innerHTML : '';
+            const originalDisabled = submitBtn ? submitBtn.disabled : false;
+            
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            }
+            
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    if (data.redirect) {
+                        setTimeout(() => { window.location.href = data.redirect; }, 1200);
+                    }
+                } else {
+                    showToast(data.message || 'Something went wrong', 'error');
+                    if (submitBtn) {
+                        submitBtn.disabled = originalDisabled;
+                        submitBtn.innerHTML = originalText;
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Network error. Please try again.', 'error');
+                if (submitBtn) {
+                    submitBtn.disabled = originalDisabled;
+                    submitBtn.innerHTML = originalText;
+                }
+            }
+        });
+    });
+});
+</script>
+</body>
+</html>

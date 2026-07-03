@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Worker Verification | HomeServe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5;
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+            --dark: #1e293b; --gray: #64748b; --light: #f8fafc;
+            --border: #e2e8f0; --card-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--light); min-height:100vh; padding:20px; color:var(--dark); }
+        .admin-container { max-width:1400px; margin:0 auto; }
+
+        /* Header */
+        .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; background:white; padding:20px 30px; border-radius:16px; box-shadow:var(--card-shadow); flex-wrap:wrap; gap:15px; }
+        .header-left { display:flex; align-items:center; gap:15px; }
+        .header-left h2 { font-size:22px; font-weight:800; color:var(--dark); display:flex; align-items:center; gap:10px; }
+        .header-left h2 i { color:var(--primary); }
+        .header-actions { display:flex; gap:12px; align-items:center; }
+        .back-link { text-decoration:none; color:var(--gray); font-weight:600; font-size:14px; display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:10px; transition:all 0.2s; }
+        .back-link:hover { background:var(--light); color:var(--primary); }
+        .logout-btn { background:linear-gradient(135deg,var(--danger),#dc2626); color:white; text-decoration:none; padding:10px 20px; border-radius:10px; font-weight:600; font-size:13px; display:flex; align-items:center; gap:8px; transition:transform 0.2s; }
+        .logout-btn:hover { transform:translateY(-2px); }
+
+        /* Flash Messages */
+        .flash-msg { padding:14px 20px; background:#dcfce7; border-left:4px solid var(--success); border-radius:0 10px 10px 0; color:#15803d; font-size:14px; margin-bottom:20px; display:flex; align-items:center; gap:10px; animation:slideIn 0.3s ease; }
+        .flash-msg.error { background:#fee2e2; border-color:var(--danger); color:#b91c1c; }
+        @keyframes slideIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+
+        /* Filter Tabs */
+        .filter-tabs { display:flex; gap:8px; margin-bottom:20px; background:white; padding:8px; border-radius:12px; box-shadow:var(--card-shadow); width:fit-content; }
+        .filter-tab { padding:10px 20px; border:none; background:transparent; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer; color:var(--gray); transition:all 0.2s; display:flex; align-items:center; gap:6px; }
+        .filter-tab.active { background:var(--primary); color:white; }
+        .filter-tab .count { background:rgba(255,255,255,0.3); padding:2px 8px; border-radius:10px; font-size:11px; }
+        .filter-tab.active .count { background:rgba(255,255,255,0.2); }
+
+        /* Search */
+        .search-bar { display:flex; gap:10px; margin-bottom:20px; max-width:400px; }
+        .search-bar input { flex:1; padding:12px 16px; border:2px solid var(--border); border-radius:10px; font-size:14px; background:white; }
+        .search-bar input:focus { outline:none; border-color:var(--primary); }
+        .search-bar button { padding:12px 20px; background:var(--primary); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600; }
+
+        /* Workers Container */
+        .workers-container { background:white; border-radius:16px; box-shadow:var(--card-shadow); overflow:hidden; }
+        .table-header { display:grid; grid-template-columns:2fr 1.5fr 1fr 1fr 1.5fr; padding:15px 25px; background:var(--light); font-size:12px; font-weight:700; color:var(--gray); text-transform:uppercase; letter-spacing:0.4px; border-bottom:1px solid var(--border); }
+        .worker-card { display:grid; grid-template-columns:2fr 1.5fr 1fr 1fr 1.5fr; padding:20px 25px; border-bottom:1px solid var(--border); align-items:center; transition:background 0.2s; }
+        .worker-card:hover { background:#fafafa; }
+        .worker-card:last-child { border-bottom:none; }
+
+        /* Worker Info */
+        .worker-info { display:flex; align-items:center; gap:15px; }
+        .worker-avatar { width:50px; height:50px; border-radius:12px; object-fit:cover; border:2px solid var(--primary); background:var(--light); }
+        .worker-details h4 { font-size:15px; font-weight:700; color:var(--dark); margin-bottom:3px; }
+        .worker-details p { font-size:13px; color:var(--gray); margin:2px 0; }
+        .worker-details .service { color:var(--primary); font-weight:500; }
+
+        /* Document Links - FIXED */
+        .doc-links { display:flex; flex-direction:column; gap:6px; }
+        .doc-link { display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--primary); text-decoration:none; font-weight:500; cursor:pointer; }
+        .doc-link:hover { text-decoration:underline; }
+        .doc-link i { font-size:11px; }
+        .doc-link.disabled { color:var(--gray); cursor:not-allowed; pointer-events:none; }
+
+        /* Status Badge */
+        .status-badge { display:inline-flex; align-items:center; gap:5px; padding:6px 14px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; }
+        .status-pending { background:#fff7ed; color:#9a3412; }
+        .status-approved { background:#dcfce7; color:#15803d; }
+        .status-rejected { background:#fee2e2; color:#b91c1c; }
+
+        /* Action Buttons - FIXED */
+        .action-buttons { display:flex; gap:8px; justify-content:flex-end; }
+        .btn { padding:8px 16px; border:none; border-radius:8px; font-weight:600; font-size:12px; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:6px; }
+        .btn-approve { background:linear-gradient(135deg,var(--success),#059669); color:white; }
+        .btn-reject { background:linear-gradient(135deg,var(--danger),#dc2626); color:white; }
+        .btn-view { background:var(--light); color:var(--dark); border:1px solid var(--border); }
+        .btn:hover { transform:translateY(-2px); }
+        .btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+
+        /* Empty State */
+        .empty-state { text-align:center; padding:60px 20px; color:var(--gray); }
+        .empty-state i { font-size:60px; margin-bottom:15px; opacity:0.2; }
+        .empty-state h3 { color:var(--dark); margin-bottom:8px; font-size:18px; }
+
+        /* Modal */
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:20px; }
+        .modal.active { display:flex; }
+        .modal-content { background:white; border-radius:20px; max-width:600px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); }
+        .modal-header { padding:20px 25px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+        .modal-header h3 { font-size:18px; font-weight:700; color:var(--dark); }
+        .modal-close { background:none; border:none; font-size:24px; color:var(--gray); cursor:pointer; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+        .modal-close:hover { background:var(--light); color:var(--dark); }
+        .modal-body { padding:25px; text-align:center; }
+        .modal-image { width:100%; max-height:400px; object-fit:contain; border-radius:12px; margin-bottom:15px; border:1px solid var(--border); background:#f8fafc; }
+        .modal-hint { font-size:13px; color:var(--gray); margin-top:8px; }
+        .modal-form .form-group { margin-bottom:15px; text-align:left; }
+        .modal-form label { display:block; font-size:13px; font-weight:600; color:var(--gray); margin-bottom:6px; }
+        .modal-form textarea { width:100%; padding:12px; border:2px solid var(--border); border-radius:10px; font-size:14px; resize:vertical; min-height:80px; font-family:inherit; }
+        .modal-form textarea:focus { outline:none; border-color:var(--primary); }
+        .modal-footer { padding:15px 25px 25px; display:flex; gap:10px; justify-content:flex-end; }
+        .modal-footer .btn { padding:10px 24px; font-size:13px; }
+
+        /* Responsive */
+        @media(max-width:1024px) {
+            .table-header, .worker-card { grid-template-columns:1fr 1fr; gap:15px; }
+            .table-header:nth-child(n+3), .worker-card>:nth-child(n+3) { grid-column:1/-1; }
+            .action-buttons { justify-content:flex-start; }
+        }
+        @media(max-width:640px) {
+            .header { flex-direction:column; align-items:flex-start; }
+            .filter-tabs { flex-wrap:wrap; }
+            .table-header, .worker-card { grid-template-columns:1fr; gap:10px; }
+            .table-header { display:none; }
+            .worker-card { flex-direction:column; align-items:flex-start; gap:15px; }
+            .action-buttons { width:100%; }
+            .btn { flex:1; justify-content:center; }
+        }
+    </style>
+</head>
+<body data-static-url="{{ url_for('static', filename='uploads/workers/') }}">
+<div class="admin-container">
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <h2><i class="fa-solid fa-user-shield"></i> Worker Verification</h2>
+            <span style="background:var(--light); padding:4px 12px; border-radius:20px; font-size:12px; color:var(--gray);">
+                {{ workers|length }} total
+            </span>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('admin_dashboard') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            <a href="{{ url_for('admin_logout') }}" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-msg {{ 'error' if category=='danger' else '' }}">
+                    <i class="fa-solid fa-{{ 'circle-check' if category=='success' else 'circle-xmark' }}"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all"><i class="fa-solid fa-list"></i> All <span class="count">{{ workers|length }}</span></button>
+        <button class="filter-tab" data-filter="Pending"><i class="fa-solid fa-clock"></i> Pending <span class="count">{{ workers|selectattr('status','equalto','Pending')|list|length }}</span></button>
+        <button class="filter-tab" data-filter="Approved"><i class="fa-solid fa-check"></i> Approved <span class="count">{{ workers|selectattr('status','equalto','Approved')|list|length }}</span></button>
+        <button class="filter-tab" data-filter="Rejected"><i class="fa-solid fa-xmark"></i> Rejected <span class="count">{{ workers|selectattr('status','equalto','Rejected')|list|length }}</span></button>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search by name, phone, or Aadhar...">
+        <button onclick="searchWorkers()"><i class="fa-solid fa-search"></i></button>
+    </div>
+
+    <!-- Workers List -->
+    <div class="workers-container">
+        <div class="table-header">
+            <div>Worker</div><div>Documents</div><div>Area</div><div>Status</div><div style="text-align:right">Actions</div>
+        </div>
+
+        {% if workers %}
+            {% for w in workers %}
+            <div class="worker-card" 
+                 data-status="{{ w.status or 'Pending' }}" 
+                 data-name="{{ w.name|lower }}" 
+                 data-phone="{{ w.phone or '' }}" 
+                 data-aadhar="{{ w.aadhar or '' }}"
+                 data-id="{{ w.id }}"
+                 data-photo="{{ w.photo or '' }}"
+                 data-aadhar-front="{{ w.aadhar_front or '' }}"
+                 data-aadhar-back="{{ w.aadhar_back or '' }}">
+                
+
+                <!-- Worker Info -->
+<div class="worker-info">
+    {% if w.photo %}
+        {% set p = w.photo %}
+        {% if '/' not in p %}{% set p = 'workers/' + p %}{% endif %}
+        <img src="{{ url_for('static', filename='uploads/' + p) }}" 
+             alt="{{ w.name }}" class="worker-avatar"
+             onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ w.name|urlencode }}&background=6366f1&color=fff';">
+    {% else %}
+        <div class="worker-avatar" style="background:linear-gradient(135deg,#6366f1,#8b5cf8);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;">
+            {{ (w.name or 'W')[0].upper() }}
+        </div>
+    {% endif %}
+    
+    <div class="worker-details">
+        <h4>{{ w.name }}</h4>
+        <p><i class="fa-solid fa-phone"></i> {{ w.phone or 'N/A' }}</p>
+        <p class="service"><i class="fa-solid fa-briefcase"></i> {{ w.service_name or 'Service' }}</p>
+    </div>
+</div>
+                <!-- Documents - FIXED: uses data attributes -->
+<div class="doc-links">
+    {% if w.aadhar_front %}
+        {% set af = w.aadhar_front %}
+        {% if '/' in af %}{% set af = af.split('/')[-1] %}{% endif %}
+        <span class="doc-link" 
+              data-doc-type="aadhar_front" 
+              data-doc-file="{{ af }}"
+              data-worker-name="{{ w.name }}">
+            <i class="fa-regular fa-id-card"></i> Aadhar Front
+        </span>
+    {% else %}
+        <span class="doc-link disabled"><i class="fa-regular fa-id-card"></i> No Front</span>
+    {% endif %}
+                    
+                    {% if w.aadhar_back %}
+                    <span class="doc-link" 
+                          data-doc-type="aadhar_back" 
+                          data-doc-file="{{ w.aadhar_back }}"
+                          data-worker-name="{{ w.name }}">
+                        <i class="fa-regular fa-id-card"></i> Aadhar Back
+                    </span>
+                    {% else %}
+                    <span class="doc-link disabled"><i class="fa-regular fa-id-card"></i> No Back</span>
+                    {% endif %}
+                </div>
+
+                <!-- Area -->
+                <div style="font-size:14px;color:var(--dark)">{{ w.area or '-' }}</div>
+
+                <!-- Status -->
+                <div>
+                    <span class="status-badge status-{{ (w.status or 'Pending')|lower }}" id="status-{{ w.id }}">
+                        <i class="fa-solid fa-{{ 'clock' if w.status=='Pending' else 'check' if w.status=='Approved' else 'xmark' }}"></i>
+                        {{ w.status or 'Pending' }}
+                    </span>
+                </div>
+
+                <!-- Actions - FIXED: hide for Approved AND Rejected -->
+                <!-- Actions -->
+<div class="action-buttons">
+    {% if w.status not in ['Approved', 'Rejected'] %}
+        {% set view_img = w.photo or '' %}
+        {% if '/' in view_img %}{% set view_img = view_img.split('/')[-1] %}{% endif %}
+        
+        <button class="btn btn-view" 
+                data-doc-type="profile" 
+                data-doc-file="{{ view_img }}"
+                data-worker-name="{{ w.name }}">
+            <i class="fa-solid fa-eye"></i> View
+</button>
+                    <form method="POST" style="display:inline;" onsubmit="return confirmAction(event, '{{ w.name }}', this)">
+                        <input type="hidden" name="worker_id" value="{{ w.id }}">
+                        <button type="submit" name="action" value="approve" class="btn btn-approve">
+                            <i class="fa-solid fa-check"></i> Approve
+                        </button>
+                        <button type="button" class="btn btn-reject" onclick="openRejectModal('{{ w.id }}', '{{ w.name }}')">
+                            <i class="fa-solid fa-xmark"></i> Reject
+                        </button>
+                    </form>
+                    {% elif w.status == 'Approved' %}
+                    <span style="color:var(--success);font-weight:600;font-size:13px">
+                        <i class="fa-solid fa-circle-check"></i> Verified
+                    </span>
+                    {% else %}
+                    <span style="color:var(--danger);font-weight:600;font-size:13px">
+                        <i class="fa-solid fa-circle-xmark"></i> Rejected
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fa-solid fa-users"></i>
+                <h3>No workers found</h3>
+                <p>Workers who register will appear here for verification</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Document Preview Modal -->
+<div class="modal" id="docModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">Document Preview</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <img id="modalImage" class="modal-image" src="" alt="Document">
+            <p id="modalHint" class="modal-hint"></p>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal" id="rejectModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="rejectTitle">Reject Worker</h3>
+            <button class="modal-close" onclick="closeRejectModal()">&times;</button>
+        </div>
+        <form method="POST" id="rejectForm">
+            <div class="modal-body">
+                <input type="hidden" name="worker_id" id="rejectWorkerId">
+                <input type="hidden" name="action" value="reject">
+                <div class="modal-form">
+                    <div class="form-group">
+                        <label>Reason for Rejection <span style="color:var(--danger)">*</span></label>
+                        <textarea name="verification_note" placeholder="e.g., Document unclear, Aadhar mismatch, etc." required></textarea>
+                    </div>
+                    <p class="modal-hint"><i class="fa-solid fa-info-circle"></i> This note will be shown to the worker</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" style="background:var(--light);color:var(--dark)" onclick="closeRejectModal()">Cancel</button>
+                <button type="submit" class="btn btn-reject"><i class="fa-solid fa-xmark"></i> Confirm Reject</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // ✅ Get the correct static path from a data attribute instead of Jinja in JS
+    const STATIC_BASE = document.body.dataset.staticUrl || '/static/uploads/workers/';
+
+    // Filter Tabs
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            const filter = this.dataset.filter;
+            document.querySelectorAll('.worker-card').forEach(card => {
+                card.style.display = (filter === 'all' || card.dataset.status === filter) ? '' : 'none';
+            });
+        });
+    });
+
+    // Search
+    function searchWorkers() {
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+        document.querySelectorAll('.worker-card').forEach(card => {
+            const name = card.dataset.name;
+            const phone = card.dataset.phone;
+            const aadhar = card.dataset.aadhar;
+            card.style.display = (name.includes(query) || phone.includes(query) || aadhar.includes(query)) ? '' : 'none';
+        });
+    }
+    document.getElementById('searchInput').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') searchWorkers();
+        else if (this.value === '') document.querySelectorAll('.worker-card').forEach(c => c.style.display = '');
+    });
+function openDocModal(filename, docType, workerName) {
+    if (!filename || filename === 'default.jpg') {
+        alert('No document uploaded for this worker.');
+        return;
+    }
+
+    const modal = document.getElementById('docModal');
+    const image = document.getElementById('modalImage');
+    const hint = document.getElementById('modalHint');
+    
+    // ✅ Build URL: always /static/uploads/workers/filename.jpg
+    const imageUrl = `/static/uploads/workers/${filename}`;
+    
+    image.src = imageUrl;
+    image.onload = () => { hint.textContent = `✅ Loaded: ${docType}`; };
+    image.onerror = () => {
+        this.src = 'https://via.placeholder.com/400x300/e2e8f0/64748b?text=Not+Found';
+        hint.textContent = `⚠️ File not found: ${imageUrl}`;
+    };
+    
+    document.getElementById('modalTitle').textContent = `${workerName} - ${docType}`;
+    modal.classList.add('active');
+}
+    // ✅ Click handlers for doc links
+    document.querySelectorAll('.doc-link:not(.disabled), .btn-view').forEach(el => {
+        el.addEventListener('click', function() {
+            const filename = this.dataset.docFile;
+            const docType = this.dataset.docType;
+            const workerName = this.dataset.workerName;
+            console.log('Clicked:', { filename, docType, workerName });
+            openDocModal(filename, docType, workerName);
+        });
+    });
+
+    function closeModal() { document.getElementById('docModal').classList.remove('active'); }
+    
+    function openRejectModal(workerId, workerName) {
+        document.getElementById('rejectWorkerId').value = workerId;
+        document.getElementById('rejectTitle').textContent = `Reject: ${workerName}`;
+        document.getElementById('rejectModal').classList.add('active');
+    }
+    function closeRejectModal() {
+        document.getElementById('rejectModal').classList.remove('active');
+        document.querySelector('#rejectForm textarea').value = '';
+    }
+
+    function confirmAction(e, workerName, form) {
+        const action = form.querySelector('[name="action"]').value;
+        if (!confirm(`Are you sure you want to ${action} "${workerName}"?`)) { e.preventDefault(); return false; }
+        return true;
+    }
+
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') { closeModal(); closeRejectModal(); }
+    });
+
+    window.addEventListener('DOMContentLoaded', function() {
+        const flash = document.querySelector('.flash-msg');
+        if (flash && (flash.textContent.includes('approved') || flash.textContent.includes('rejected'))) {
+            setTimeout(() => location.reload(), 1000);
+        }
+    });
+</script>
+
+</body>
+</html>

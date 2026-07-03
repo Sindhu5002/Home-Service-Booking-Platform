@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Worker Registration | HomeServe</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    :root { 
+        --primary:#6366f1; --primary-dark:#4f46e5;
+        --bg:#f8fafc; --border:#e2e8f0; --dark:#1e293b;
+        --danger:#ef4444; --success:#22c55e; --warning:#f59e0b; --gray:#64748b; 
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { 
+        font-family:'Plus Jakarta Sans',sans-serif; 
+        background:var(--bg); 
+        min-height:100vh; 
+        display:flex; justify-content:center; align-items:center; 
+        padding:15px; 
+    }
+
+    /* 🔔 Toast Container - CENTERED, NO SHAKE */
+    #toastContainer {
+        position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
+        z-index: 9999; width: 90%; max-width: 420px; pointer-events: none;
+        display: flex; flex-direction: column; align-items: center;
+    }
+    .toast-msg {
+        width: 100%; padding: 14px 18px; margin: 6px 0; border-radius: 12px;
+        font-size: 14px; font-weight: 600; text-align: center;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12); background: white;
+        border-left: 5px solid var(--primary); pointer-events: auto;
+        opacity: 0; transform: translateY(-15px);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .toast-msg.visible { opacity: 1; transform: translateY(0); }
+    .toast-msg.success { border-left-color: var(--success); background: #f0fdf4; color: #166534; }
+    .toast-msg.danger  { border-left-color: var(--danger); background: #fef2f2; color: #991b1b; }
+    .toast-msg.warning { border-left-color: var(--warning); background: #fffbeb; color: #92400e; }
+
+    /* Main Wrapper */
+    .wrapper { 
+        display:flex; width:100%; max-width:950px; background:white; 
+        border-radius:24px; overflow:hidden; 
+        box-shadow:0 20px 40px rgba(0,0,0,0.1); 
+        max-height: 95vh;
+    }
+    
+    /* Left Side - Fixed & Visible */
+    .left { 
+        width:42%; 
+        background: linear-gradient(135deg, rgba(179, 109, 216, 0.619), rgba(179, 109, 216, 0.619)),
+                    url('https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=800') center/cover no-repeat;
+        padding:35px; color:white; display:flex; flex-direction:column; justify-content:center;
+        position: relative;
+    }
+    .left > * { position:relative; z-index:2; }
+    .left h1 { font-size:26px; font-weight:800; margin-bottom:12px; line-height:1.3; }
+    .left p { font-size:14px; opacity:0.95; line-height:1.6; margin-bottom:15px; }
+    .left ul { padding-left:20px; font-size:13px; opacity:0.95; }
+    .left li { margin:6px 0; }
+
+    /* Right Side - Scrollable if needed */
+    .right { 
+        width:58%; padding:28px 30px; 
+        overflow-y: auto; max-height: 95vh;
+    }
+    .right::-webkit-scrollbar { width: 6px; }
+    .right::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+    .right::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .right::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    h2 { font-size:20px; font-weight:800; margin-bottom:5px; color:var(--dark); }
+    .sub { color:var(--gray); font-size:13px; margin-bottom:18px; }
+    .help-text { font-size:11px; color:var(--gray); margin-top:3px; display:block; }
+    
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .field { margin-bottom:10px; }
+    .field label { display:block; font-size:11px; font-weight:700; color:var(--gray); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.3px; }
+    .field input, .field select { 
+        width:100%; padding:9px 12px; border:2px solid var(--border); 
+        border-radius:10px; font-size:13px; background:var(--bg); transition:0.2s; font-family:inherit;
+    }
+    .field input:focus, .field select:focus { outline:none; border-color:var(--primary); background:white; }
+    
+    /* Documents Section */
+    .docs-section {
+        background:var(--bg); padding:14px; border-radius:12px;
+        border:2px dashed var(--border); margin:12px 0;
+    }
+    .docs-section .section-label {
+        font-size:12px; font-weight:700; color:var(--dark); margin-bottom:12px; display:flex; align-items:center; gap:8px;
+    }
+    .doc-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+    .doc-item label { font-size:11px; font-weight:600; color:var(--gray); margin-bottom:4px; display:block; }
+    .doc-item input { padding:8px; font-size:12px; }
+    
+    .btn { 
+        width:100%; padding:12px; background:var(--primary); color:white; 
+        border:none; border-radius:10px; font-weight:700; font-size:14px; 
+        cursor:pointer; margin-top:10px; transition:0.2s; font-family:inherit;
+    }
+    .btn:hover { background:var(--primary-dark); transform:translateY(-1px); box-shadow:0 4px 12px rgba(99,102,241,0.3); }
+    
+    .footer { text-align:center; margin-top:18px; padding-top:15px; border-top:1px solid var(--border); font-size:13px; color:var(--gray); }
+    .footer a { color:var(--primary); text-decoration:none; font-weight:600; }
+    .footer a:hover { text-decoration:underline; }
+    
+    @media(max-width:900px){ 
+        .wrapper{flex-direction:column;max-width:480px;max-height:none;} 
+        .left{width:100%;padding:30px;min-height:200px;} 
+        .right{width:100%;padding:25px;max-height:none;} 
+        .grid-2{grid-template-columns:1fr;} 
+    }
+    @media(max-width:480px){
+        body{padding:10px;}
+        .left h1{font-size:22px;}
+        .right{padding:20px;}
+        h2{font-size:19px;}
+        .btn{padding:14px;}
+    }
+</style>
+</head>
+<body>
+
+<div id="toastContainer"></div>
+
+<div class="wrapper">
+    <div class="left">
+        <h1>🛠️ Join HomeServe</h1>
+        <p>Register as a verified professional. Get matched with customers in your service area and start earning.</p>
+        <ul>
+            <li>✅ Receive nearby job alerts instantly</li>
+            <li>✅ Control your availability online/offline</li>
+            <li>✅ Secure payments & transparent ratings</li>
+        </ul>
+    </div>
+
+    <div class="right">
+        <h2>Worker Registration</h2>
+        <p class="sub">Fill in your details accurately for fast approval</p>
+
+        <form method="POST" action="{{ url_for('worker_register') }}" enctype="multipart/form-data">
+            <div class="field">
+                <label>Full Name *</label>
+                <input type="text" name="name" required placeholder="">
+            </div>
+            
+            <div class="grid-2">
+                <div class="field">
+                    <label>Email Address *</label>
+                    <input type="email" name="email" required placeholder="">
+                </div>
+                <div class="field">
+                    <label>Password *</label>
+                    <input type="password" name="password" required minlength="6" placeholder="">
+                </div>
+            </div>
+            
+            <div class="grid-2">
+                <div class="field">
+                    <label>Phone Number *</label>
+                    <input type="tel" name="phone" required pattern="[0-9]{10}" placeholder="">
+                </div>
+                <div class="field">
+                    <label>Aadhar Number *</label>
+                    <input type="text" name="aadhar" required pattern="[0-9]{12}" maxlength="12" placeholder="12-digit Aadhar">
+                </div>
+            </div>
+            
+            <div class="grid-2">
+                <div class="field">
+                    <label>Service Category *</label>
+                    <select name="service_id" required>
+                        <option value="">Select your specialty</option>
+                        {% for s in services %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Experience (Years) *</label>
+                    <input type="number" name="experience" required min="0" placeholder="">
+                </div>
+            </div>
+            
+            <div class="grid-2">
+                <div class="field">
+                    <label>Gender *</label>
+                    <select name="gender" required>
+                        <option value="">Select</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="others">Other</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Service Area *</label>
+                    <input type="text" name="area" required placeholder="">
+                    <small class="help-text">Where you provide services (used for customer matching)</small>
+                </div>
+            </div>
+            
+            <div class="field">
+                <label>Home Address (Optional)</label>
+                <input type="text" name="address" placeholder="">
+                <small class="help-text">Not shown to customers. Used only for identity verification.</small>
+            </div>
+            
+            <!-- Documents Section -->
+            <div class="docs-section">
+                <label class="section-label"><i class="fas fa-file-upload"></i> Upload Documents</label>
+                <div class="doc-row">
+                    <div class="doc-item">
+                        <label>📄 Aadhar Front *</label>
+                        <input type="file" name="aadhar_front" accept="image/*,.pdf" required>
+                    </div>
+                    <div class="doc-item">
+                        <label>📄 Aadhar Back *</label>
+                        <input type="file" name="aadhar_back" accept="image/*,.pdf" required>
+                    </div>
+                </div>
+                <div class="doc-item">
+                    <label>👤 Profile Photo *</label>
+                    <input type="file" name="photo" accept="image/*" required>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn">Register & Wait for Approval</button>
+        </form>
+        
+        <div class="footer">Already registered? <a href="{{ url_for('worker_login') }}">Login here</a></div>
+    </div>
+</div>
+
+<script>
+// ✅ BIG, ATTRACTIVE TOAST (Same as user pages)
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    
+    const styles = {
+        success: { 
+            bg: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', 
+            border: '#22c55e', 
+            text: '#166534', 
+            icon: 'circle-check',
+            shadow: '0 8px 25px rgba(34, 197, 94, 0.25)'
+        },
+        error: { 
+            bg: 'linear-gradient(135deg, #fef2f2, #fee2e2)', 
+            border: '#ef4444', 
+            text: '#b91c1c', 
+            icon: 'circle-xmark',
+            shadow: '0 8px 25px rgba(239, 68, 68, 0.25)'
+        },
+        warning: { 
+            bg: 'linear-gradient(135deg, #fffbeb, #fef3c7)', 
+            border: '#f59e0b', 
+            text: '#92400e', 
+            icon: 'triangle-exclamation',
+            shadow: '0 8px 25px rgba(245, 158, 11, 0.25)'
+        }
+    };
+    const style = styles[type] || styles.success;
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast-card ' + type;
+    toast.style.cssText = `
+        width: 100%; max-width: 480px;
+        padding: 20px 24px;
+        margin: 8px 0;
+        border-radius: 16px;
+        background: ${style.bg};
+        border-left: 5px solid ${style.border};
+        color: ${style.text};
+        font-size: 16px;
+        font-weight: 700;
+        text-align: center;
+        box-shadow: ${style.shadow};
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        pointer-events: auto;
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    `;
+    toast.innerHTML = `
+        <i class="fas fa-${style.icon}" style="font-size: 22px;"></i>
+        <span style="flex: 1;">${message}</span>
+    `;
+    container.appendChild(toast);
+    
+    void toast.offsetWidth;
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+// ✅ AJAX FORM SUBMIT WITH FILE UPLOAD SUPPORT (Matches user registration flow)
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form[method="POST"]');
+    if (!form) return;
+    
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.innerHTML : '';
+        const originalDisabled = submitBtn ? submitBtn.disabled : false;
+        
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+        }
+        
+        try {
+            // ✅ FormData handles file uploads automatically
+            const formData = new FormData(form);
+            
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                // ✅ Critical: Send this header so Flask knows it's AJAX
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                // ✅ Do NOT set Content-Type — browser adds multipart boundary automatically
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // ✅ Show toast FIRST, then redirect (exact user flow)
+                showToast(data.message, 'success');
+                if (data.redirect) {
+                    setTimeout(() => { window.location.href = data.redirect; }, 1500);
+                }
+            } else {
+                showToast(data.message || 'Something went wrong', 'error');
+                if (submitBtn) {
+                    submitBtn.disabled = originalDisabled;
+                    submitBtn.innerHTML = originalText;
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Network error. Please try again.', 'error');
+            if (submitBtn) {
+                submitBtn.disabled = originalDisabled;
+                submitBtn.innerHTML = originalText;
+            }
+        }
+    });
+});
+</script>
+</script>
+</body>
+</html>

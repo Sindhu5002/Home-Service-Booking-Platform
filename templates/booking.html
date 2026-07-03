@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Pro | HomeServe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1; --primary-light: #e0e7ff;
+            --sky: #38bdf8; --sky-light: #e0f2fe;
+            --bg: #f8fafc; --surface: #ffffff;
+            --text-main: #0f172a; --text-muted: #64748b;
+            --border: #e2e8f0; --shadow: 0 10px 30px -8px rgba(0,0,0,0.12);
+            --radius: 20px; --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); min-height: 100vh; padding: 24px; display: flex; justify-content: center; align-items: flex-start; color: var(--text-main); }
+        
+        .booking-container { width: 100%; max-width: 680px; background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; animation: slideUp 0.5s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .header { padding: 32px 28px; background: linear-gradient(135deg, var(--primary), #4f46e5); color: white; text-align: center; }
+        .header h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+        .header p { opacity: 0.9; font-weight: 500; font-size: 14px; }
+
+        .content { padding: 32px 28px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .input-field { position: relative; }
+        .input-field i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--primary); z-index: 2; }
+        .input-field input, .input-field select, textarea { width: 100%; padding: 12px 14px 12px 40px; border: 2px solid var(--border); border-radius: 12px; font-size: 14px; background: #fafbfc; transition: var(--transition); font-family: inherit; }
+        .input-field input:focus, .input-field select:focus, textarea:focus { outline: none; border-color: var(--primary); background: white; box-shadow: 0 0 0 4px var(--primary-light); }
+        textarea { padding-left: 14px; min-height: 80px; resize: vertical; }
+        
+        /* AM/PM Time Picker */
+        .time-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 10px; }
+        .time-grid select { padding: 12px 8px; font-weight: 600; text-align: center; cursor: pointer; }
+
+        .primary-btn { width: 100%; padding: 16px; border: none; border-radius: 14px; background: var(--primary); color: white; font-weight: 700; font-size: 15px; cursor: pointer; transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 8px; }
+        .primary-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -4px rgba(99,102,241,0.4); }
+        .primary-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        /* ✅ MESMERIZING LOADING OVERLAY */
+        #radar-overlay { 
+            position: fixed; inset: 0; z-index: 1000; 
+            display: none; flex-direction: column; align-items: center; justify-content: center; 
+            text-align: center;
+            background: 
+                radial-gradient(ellipse at 20% 80%, rgba(99,102,241,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(56,189,248,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.9) 0%, rgba(240,249,255,0.95) 100%);
+            animation: gradientPulse 8s ease-in-out infinite;
+        }
+        
+        @keyframes gradientPulse {
+            0%, 100% { background-position: 0% 50%, 100% 50%, 50% 50%; }
+            50% { background-position: 100% 50%, 0% 50%, 50% 50%; }
+        }
+        
+        /* Floating particles */
+        #radar-overlay::before {
+            content: '';
+            position: absolute;
+            width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(99,102,241,0.08) 0%, transparent 20%),
+                radial-gradient(circle at 80% 70%, rgba(56,189,248,0.08) 0%, transparent 20%),
+                radial-gradient(circle at 40% 80%, rgba(99,102,241,0.06) 0%, transparent 25%),
+                radial-gradient(circle at 60% 20%, rgba(56,189,248,0.06) 0%, transparent 25%);
+            animation: floatParticles 20s linear infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes floatParticles {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-20px) rotate(360deg); }
+        }
+        
+        .loader-wrapper { 
+            display: flex; flex-direction: column; align-items: center; gap: 28px; 
+            position: relative; z-index: 10;
+            animation: floatWrapper 3s ease-in-out infinite;
+        }
+        
+        @keyframes floatWrapper {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        
+        /* Glowing multi-ring spinner */
+        .loader-spinner {
+            position: relative;
+            width: 100px; height: 100px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        .loader-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            animation: spinRing 2s linear infinite;
+        }
+        
+        .loader-ring:nth-child(1) {
+            width: 100%; height: 100%;
+            border-top-color: var(--primary);
+            border-right-color: var(--sky);
+            animation-duration: 2s;
+            box-shadow: 0 0 20px rgba(99,102,241,0.4);
+        }
+        
+        .loader-ring:nth-child(2) {
+            width: 80%; height: 80%;
+            border-bottom-color: var(--sky);
+            border-left-color: var(--primary);
+            animation-duration: 1.5s;
+            animation-direction: reverse;
+            box-shadow: 0 0 15px rgba(56,189,248,0.3);
+        }
+        
+        .loader-ring:nth-child(3) {
+            width: 60%; height: 60%;
+            border-top-color: var(--primary);
+            animation-duration: 1s;
+            box-shadow: 0 0 10px rgba(99,102,241,0.5);
+        }
+        
+        @keyframes spinRing {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Center glow */
+        .loader-spinner::after {
+            content: '';
+            position: absolute;
+            width: 30px; height: 30px;
+            background: linear-gradient(135deg, var(--primary), var(--sky));
+            border-radius: 50%;
+            box-shadow: 0 0 25px rgba(99,102,241,0.6), 0 0 40px rgba(56,189,248,0.4);
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.9; }
+        }
+        
+        .loader-text h3 { 
+            font-size: 22px; font-weight: 800; margin-bottom: 8px; 
+            background: linear-gradient(135deg, var(--text-main), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: textGlow 3s ease-in-out infinite;
+        }
+        
+        @keyframes textGlow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+        
+        .loader-text p { 
+            font-size: 15px; color: var(--text-muted); font-weight: 500; 
+            max-width: 280px; line-height: 1.5;
+        }
+        
+        /* Sparkle effects */
+        .sparkle {
+            position: absolute;
+            width: 8px; height: 8px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 2px rgba(255,255,255,0.8);
+            animation: sparkleFloat 3s ease-in-out infinite;
+            opacity: 0;
+        }
+        
+        .sparkle:nth-child(1) { top: 10%; left: 20%; animation-delay: 0s; }
+        .sparkle:nth-child(2) { top: 20%; right: 15%; animation-delay: 0.5s; }
+        .sparkle:nth-child(3) { bottom: 15%; left: 25%; animation-delay: 1s; }
+        .sparkle:nth-child(4) { bottom: 25%; right: 20%; animation-delay: 1.5s; }
+        
+        @keyframes sparkleFloat {
+            0%, 100% { opacity: 0; transform: translateY(0) scale(0.8); }
+            50% { opacity: 1; transform: translateY(-15px) scale(1.2); }
+        }
+
+        /* ✅ WORKER CARDS */
+        #step-selection { display: none; padding-top: 10px; }
+        .selection-header { text-align: center; margin-bottom: 24px; }
+        .count-badge { display: inline-block; background: var(--sky-light); color: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .worker-grid { display: flex; flex-direction: column; gap: 12px; max-height: 380px; overflow-y: auto; padding-right: 6px; }
+        .worker-grid::-webkit-scrollbar { width: 5px; }
+        .worker-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .w-card { position: relative; padding: 14px; background: #fafbfc; border: 2px solid var(--border); border-radius: 16px; cursor: pointer; transition: var(--transition); display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; }
+        .w-card:hover { border-color: var(--sky); transform: translateY(-2px); box-shadow: var(--shadow); background: white; }
+        .w-card.selected { border-color: var(--primary); background: linear-gradient(135deg, var(--primary-light), #f5f3ff); }
+        .w-card input { display: none; }
+        .w-avatar { width: 60px; height: 60px; border-radius: 14px; object-fit: cover; border: 2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .w-info h4 { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .w-area { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+        
+        /* ✅ BADGES */
+        .badge-worked { position: absolute; top: 12px; right: 12px; background: #ecfdf5; color: #047857; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px; border: 1px solid #bbf7d0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .status-pill { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; margin-top: 6px; display: inline-block; }
+        .status-pill.free { background: #ecfdf5; color: #047857; }
+        .status-pill.busy { background: #fff7ed; color: #b45309; }
+        .check-icon { position: absolute; bottom: 14px; right: 14px; color: var(--primary); font-size: 20px; opacity: 0; transition: var(--transition); }
+        .w-card.selected .check-icon { opacity: 1; }
+
+        .back-btn { background: transparent; border: none; color: var(--text-muted); padding: 10px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-top: 12px; }
+        .back-btn:hover { color: var(--primary); }
+        
+        @media(max-width: 600px) { .form-row, .time-grid { grid-template-columns: 1fr; } .booking-container { border-radius: 0; min-height: 100vh; } }
+    </style>
+</head>
+<body>
+
+<div class="booking-container">
+    <div class="header">
+        <h1>{{ service.name or 'Book Service' }}</h1>
+        <p>Find verified local experts instantly</p>
+    </div>
+    
+    <div class="content">
+        <form id="bookForm" method="POST">
+            <div id="step-details">
+                <div class="input-group"><label>Full Name</label><div class="input-field"><i class="fas fa-user"></i><input type="text" name="customer_name" value="{{ user.get('full_name','') }}" required></div></div>
+                <div class="form-row">
+                    <div class="input-group"><label>Date</label><div class="input-field"><i class="fas fa-calendar"></i><input type="date" name="date" id="dateIn" required></div></div>
+                    <div class="input-group">
+                        <label>Time</label>
+                        <div class="time-grid">
+                            <select id="h" onchange="formatTime()"><option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option><option value="8">08</option><option value="9">09</option><option value="10">10</option><option value="11">11</option><option value="12" selected>12</option></select>
+                            <select id="m" onchange="formatTime()"><option value="00">00</option><option value="15">15</option><option value="30">30</option><option value="45">45</option></select>
+                            <select id="p" onchange="formatTime()"><option value="AM">AM</option><option value="PM">PM</option></select>
+                        </div>
+                        <input type="hidden" name="time" id="timeHidden">
+                    </div>
+                </div>
+                <div class="input-group"><label>Address</label><textarea name="address" placeholder="Building, street, landmark..." required></textarea></div>
+                <div class="form-row">
+                    <div class="input-group"><label>Phone</label><div class="input-field"><i class="fas fa-phone"></i><input type="tel" name="phone" value="{{ user.get('phone','') }}" required></div></div>
+                    <div class="input-group"><label>Area</label><div class="input-field"><i class="fas fa-location-dot"></i><input type="text" name="area" value="{{ user.get('area','') }}" required></div></div>
+                </div>
+                <button type="button" class="primary-btn" onclick="startScan()"><i class="fas fa-radar"></i> Scan Professionals</button>
+            </div>
+
+            <div id="step-selection">
+                <div class="selection-header">
+                    <h3 style="font-size:20px;font-weight:800;margin-bottom:4px">✨ Experts Matched</h3>
+                    <div class="count-badge"><span id="selCount">0</span>/3 Selected</div>
+                </div>
+                
+                <div class="worker-grid">
+                    {% if workers %}
+                        {% for w in workers %}
+                        {% set img = url_for('static', filename='uploads/workers/' + w.photo) if w.photo and w.photo!='default.jpg' else 'https://ui-avatars.com/api/?name=' + (w.name|urlencode) + '&background=6366f1&color=fff&size=120' %}
+                        <label class="w-card">
+                            <input type="checkbox" name="worker_ids" value="{{ w.id }}" onchange="toggle(this)">
+                            <img src="{{ img }}" alt="{{ w.name }}" class="w-avatar">
+                            {% if w.worked_before %}<div class="badge-worked"><i class="fas fa-history"></i> Recently worked for you</div>{% endif %}
+                            <div class="w-info">
+                                <h4>{{ w.name }} {% if w.verified_badge %}<i class="fas fa-circle-check" style="color:#10b981;font-size:13px"></i>{% endif %}</h4>
+                                <div class="w-area"><i class="fas fa-map-pin"></i> {{ w.area }}</div>
+                                <span class="status-pill {{ 'free' if not w.busy_until else 'busy' }}">
+                                    {% if w.busy_until %}🟡 Busy until {{ w.busy_until }}{% else %}🟢 Available{% endif %}
+                                </span>
+                            </div>
+                            <i class="fas fa-circle-check check-icon"></i>
+                        </label>
+                        {% endfor %}
+                    {% else %}
+                    <div style="text-align:center;padding:40px;color:var(--text-muted)"><i class="fas fa-magnifying-glass-location" style="font-size:32px;margin-bottom:12px;opacity:0.4;display:block"></i>No local pros available right now. Try a different time.</div>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="primary-btn" id="subBtn" disabled><i class="fas fa-paper-plane"></i> Send Request</button>
+                <button type="button" class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i> Change Details</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ✅ MESMERIZING LOADING OVERLAY -->
+<div id="radar-overlay">
+    <!-- Floating sparkles -->
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    
+    <div class="loader-wrapper">
+        <div class="loader-spinner">
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+        </div>
+        <div class="loader-text">
+            <h3>Finding your professionals...</h3>
+            <p>Matching verified experts in your area with the perfect skills</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// ✅ Set minimum date to today and default to today
+document.getElementById('dateIn').min = new Date().toISOString().split('T')[0];
+document.getElementById('dateIn').value = new Date().toISOString().split('T')[0];
+formatTime(); // Init time
+let count = 0;
+
+// ✅ Pre-fill date/time from URL params (after auto-reload)
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('date')) {
+    document.getElementById('dateIn').value = urlParams.get('date');
+}
+if (urlParams.get('time')) {
+    // Convert 24-hour time back to 12-hour format for display
+    const time24 = urlParams.get('time');
+    const [h24, m24] = time24.split(':').map(Number);
+    const period = h24 >= 12 ? 'PM' : 'AM';
+    const h12 = h24 % 12 || 12;
+    
+    document.getElementById('h').value = h12;
+    document.getElementById('m').value = String(m24).padStart(2, '0');
+    document.getElementById('p').value = period;
+    formatTime(); // Update hidden field
+}
+
+function formatTime(){
+    let h=+document.getElementById('h').value, m=document.getElementById('m').value, p=document.getElementById('p').value;
+    if(p==='PM'&&h!==12) h+=12; if(p==='AM'&&h===12) h=0;
+    document.getElementById('timeHidden').value = `${String(h).padStart(2,'0')}:${m}`;
+}
+
+// ✅ Auto-reload workers when date or time changes
+function reloadWorkersWithDateTime() {
+    const date = document.getElementById('dateIn').value;
+    const time = document.getElementById('timeHidden').value;
+    
+    // Only reload if both date and time are set
+    if (date && time) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('date', date);
+        url.searchParams.set('time', time);
+        window.location.href = url.toString();
+    }
+}
+
+// Add event listeners to date and time inputs
+document.getElementById('dateIn').addEventListener('change', reloadWorkersWithDateTime);
+document.getElementById('h').addEventListener('change', function() { formatTime(); reloadWorkersWithDateTime(); });
+document.getElementById('m').addEventListener('change', function() { formatTime(); reloadWorkersWithDateTime(); });
+document.getElementById('p').addEventListener('change', function() { formatTime(); reloadWorkersWithDateTime(); });
+
+function startScan(){
+    const f = document.querySelectorAll('input[required], select[required], textarea[required]');
+    if([...f].some(i=>!i.value)){ alert('Please fill all fields'); return; }
+    document.getElementById('step-details').style.display='none';
+    const r = document.getElementById('radar-overlay'); r.style.display='flex';
+    setTimeout(()=>{ r.style.display='none'; document.getElementById('step-selection').style.display='block'; }, 2400);
+}
+
+function goBack(){ 
+    document.getElementById('step-selection').style.display='none'; 
+    document.getElementById('step-details').style.display='block'; 
+}
+
+function toggle(cb){
+    const c=cb.closest('.w-card');
+    if(cb.checked){ 
+        if(count>=3){ cb.checked=false; alert('Max 3 allowed'); return; } 
+        c.classList.add('selected'); 
+        count++; 
+    }
+    else{ 
+        c.classList.remove('selected'); 
+        count--; 
+    }
+    document.getElementById('selCount').textContent=count;
+    document.getElementById('subBtn').disabled = count===0;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Booking | HomeServe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary:#6366f1; --primary-dark:#4f46e5; --primary-light:#e0e7ff; --success:#10b981; --success-light:#dcfce7; --success-text:#166534; --warning:#f59e0b; --info:#3b82f6; --info-light:#dbeafe; --dark:#1e293b; --gray:#64748b; --light:#f8fafc; --white:#ffffff; --border:#e2e8f0; --shadow:0 15px 30px -5px rgba(0,0,0,0.1); --radius:20px; --transition:all 0.3s cubic-bezier(0.4,0,0.2,1); }
+        *{margin:0;padding:0;box-sizing:border-box} body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--light);min-height:100vh;padding:20px;color:var(--dark)}
+        .container{max-width:650px;margin:0 auto} .page-header{text-align:center;padding:24px 20px;margin-bottom:20px} .page-header h1{font-size:22px;font-weight:800;margin-bottom:6px} .page-header p{color:var(--gray);font-size:14px}
+        .booking-badge{display:inline-block;background:var(--primary-light);color:var(--primary-dark);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-top:8px}
+        .card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px;animation:slideUp 0.4s ease}
+        @keyframes slideUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+        .status-card{text-align:center;padding:28px 24px} .status-icon{width:80px;height:80px;margin:0 auto 16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;color:white}
+        .status-icon.pending{background:linear-gradient(135deg,var(--warning),#d97706)} .status-icon.assigned{background:linear-gradient(135deg,var(--info),#2563eb)}
+        .status-icon.arrived{background:linear-gradient(135deg,var(--primary),var(--primary-dark))} .status-icon.in_progress{background:linear-gradient(135deg,#8b5cf6,#7c3aed)}
+        .status-icon.completed{background:linear-gradient(135deg,var(--success),#059669)} .status-title{font-size:18px;font-weight:800;margin-bottom:6px}
+        .status-message{color:var(--gray);font-size:14px;margin-bottom:20px}
+        .progress-wrap{position:relative;height:4px;background:var(--border);border-radius:2px;margin:20px 0;overflow:hidden}
+        .progress-fill{position:absolute;top:0;left:0;height:100%;background:var(--primary);border-radius:2px;transition:width 0.5s ease;width:20%}
+        .progress-steps{display:flex;justify-content:space-between;margin-top:8px} .p-step{text-align:center;flex:1;position:relative}
+        .p-dot{width:10px;height:10px;border-radius:50%;background:var(--border);margin:0 auto 4px;transition:var(--transition)}
+        .p-dot.active{background:var(--primary);transform:scale(1.3)} .p-dot.completed{background:var(--success)}
+        .p-label{font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase} .p-label.active{color:var(--primary)} .p-label.completed{color:var(--success)}
+        .worker-card{padding:18px 24px;background:var(--success-light);border-left:4px solid var(--success);margin:0 20px 20px;border-radius:12px;display:none}
+        .worker-card.show{display:block;animation:fadeIn 0.3s ease} @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .w-header{display:flex;align-items:center;gap:14px;margin-bottom:10px} .w-photo{width:50px;height:50px;border-radius:12px;object-fit:cover;border:2px solid var(--white)}
+        .w-name{font-size:15px;font-weight:700;margin-bottom:2px} .w-badge{display:inline-flex;align-items:center;gap:4px;background:white;padding:2px 6px;border-radius:8px;font-size:9px;font-weight:700;color:var(--success)}
+        .w-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;color:var(--dark)} .w-meta i{color:var(--primary);width:14px;text-align:center;margin-right:4px}
+        .call-btn{display:inline-flex;align-items:center;gap:6px;background:white;color:var(--primary);padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;margin-top:10px;border:1.5px solid var(--primary);transition:var(--transition)}
+        .call-btn:hover{background:var(--primary);color:white}
+        .details-card{padding:20px 24px} .details-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+        .d-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--border);font-size:13px} .d-row:last-child{border-bottom:none}
+        .d-label{color:var(--gray)} .d-value{font-weight:600;text-align:right}
+        .extra-note{background:#f8fafc;padding:8px 10px;border-radius:6px;font-size:12px;color:var(--gray);margin:6px 0 12px;border-left:3px solid var(--primary)}
+        .total-row{border-top:2px solid var(--border)!important;padding-top:10px!important;margin-top:6px!important;font-size:16px!important;font-weight:800} .total-value{color:var(--primary-dark)}
+        .actions{padding:20px 24px;border-top:1px solid var(--border);display:flex;gap:10px}
+        .btn{flex:1;padding:12px;border-radius:12px;border:none;font-size:14px;font-weight:700;cursor:pointer;transition:var(--transition);display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-family:inherit}
+        .btn-primary{background:var(--primary);color:white} .btn-primary:hover{background:var(--primary-dark);transform:translateY(-2px)}
+        .btn-pay{background:linear-gradient(135deg,var(--success),#059669);color:white} .btn-pay:hover{background:#047857}
+        .btn-outline{background:transparent;border:2px solid var(--border);color:var(--dark)} .btn-outline:hover{border-color:var(--primary);color:var(--primary)}
+        
+        /* ✅ NEW: Expiry Notice Styles */
+        .expiry-notice{padding:20px 24px;margin:0 20px 20px;border-radius:12px;animation:slideUp 0.4s ease}
+        .expiry-notice.waiting{background:linear-gradient(135deg,#fef3c7,#fde68a);border-left:4px solid #f59e0b}
+        .expiry-notice.rebroadcasting{background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-left:4px solid #3b82f6}
+        .expiry-notice.cancelled{background:linear-gradient(135deg,#fee2e2,#fecaca);border-left:4px solid #ef4444}
+        .expiry-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+        .expiry-icon{font-size:24px}
+        .expiry-title{font-size:16px;font-weight:700}
+        .expiry-message{font-size:13px;margin:4px 0 0 0}
+        .countdown-box{background:white;padding:10px 16px;border-radius:8px;display:inline-flex;align-items:center;gap:8px;margin-top:8px}
+        .countdown-time{font-weight:700;font-size:18px}
+        .countdown-label{font-size:12px;color:var(--gray)}
+        
+        @media(max-width:600px){.w-meta{grid-template-columns:1fr}.actions{flex-direction:column}.progress-steps{flex-wrap:wrap;gap:4px}}
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div class="page-header">
+        <h1>Track Your Booking</h1>
+        <p>Real-time updates on your service</p>
+        <span class="booking-badge">Booking #{{ booking.id }}</span>
+    </div>
+
+    <!-- ✅ STATUS CARD -->
+    <div class="card">
+        <div class="status-card">
+            {% set s = booking.status or 'Pending' %}
+            {% if s == 'Pending' %}
+                <div class="status-icon pending"><i class="fas fa-clock"></i></div>
+                <div class="status-title">Waiting for assignment</div>
+                <div class="status-message">Your request is waiting for a professional to accept.</div>
+            {% elif s == 'Broadcast' %}
+                <div class="status-icon pending"><i class="fas fa-broadcast-tower"></i></div>
+                <div class="status-title">Finding more professionals</div>
+                <div class="status-message">We're expanding the search to more workers in your area.</div>
+            {% elif s == 'Assigned' %}
+                <div class="status-icon assigned"><i class="fas fa-user-check"></i></div>
+                <div class="status-title">Professional assigned!</div>
+                <div class="status-message">A verified professional has accepted your request.</div>
+            {% elif s == 'Arrived' %}
+                <div class="status-icon arrived"><i class="fas fa-location-dot"></i></div>
+                <div class="status-title">Professional arrived</div>
+                <div class="status-message">Your professional has reached your location.</div>
+            {% elif s == 'In Progress' %}
+                <div class="status-icon in_progress"><i class="fas fa-tools"></i></div>
+                <div class="status-title">Service in progress</div>
+                <div class="status-message">Work is currently underway. Sit back and relax!</div>
+            {% elif s == 'Completed' %}
+                <div class="status-icon completed"><i class="fas fa-check-circle"></i></div>
+                <div class="status-title">Service completed</div>
+                <div class="status-message">Great! Your service is complete. Please proceed to payment.</div>
+            {% else %}
+                <div class="status-icon" style="background:#ef4444"><i class="fas fa-times-circle"></i></div>
+                <div class="status-title">Booking cancelled</div>
+                <div class="status-message">Your booking was cancelled. Please book again.</div>
+            {% endif %}
+
+            <div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="progress-steps">
+                <div class="p-step"><div class="p-dot"></div><div class="p-label">Pending</div></div>
+                <div class="p-step"><div class="p-dot"></div><div class="p-label">Assigned</div></div>
+                <div class="p-step"><div class="p-dot"></div><div class="p-label">Arrived</div></div>
+                <div class="p-step"><div class="p-dot"></div><div class="p-label">In Progress</div></div>
+                <div class="p-step"><div class="p-dot"></div><div class="p-label">Completed</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ EXPIRY NOTICE (Only for Pending/Broadcast) -->
+    {% if booking.status in ['Pending', 'Broadcast'] %}
+    <div class="card">
+        <div class="expiry-notice {% if booking.status == 'Broadcast' %}rebroadcasting{% else %}waiting{% endif %}" id="expiryNotice">
+            <div class="expiry-header">
+                <i class="fas fa-clock expiry-icon" style="color:#b45309;"></i>
+                <div>
+                    <strong class="expiry-title" id="expiryTitle">
+                        {% if booking.status == 'Broadcast' %}
+                            🔍 Expanding search to more professionals...
+                        {% else %}
+                            ⏳ Waiting for worker response...
+                        {% endif %}
+                    </strong>
+                    <p class="expiry-message" id="expiryMessage">
+                        {% if booking.status == 'Broadcast' %}
+                            Original workers are busy. Finding more experts in your area.
+                        {% else %}
+                            We've notified 3 nearby professionals. They'll respond shortly.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            <div class="countdown-box">
+                <i class="fas fa-hourglass-half" style="color:#f59e0b;"></i>
+                <span class="countdown-time" id="countdown" style="color:#b45309;">--:--</span>
+                <span class="countdown-label">remaining</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const createdAt = new Date("{{ booking.created_at }}").getTime();
+        const rebroadcastAt = createdAt + (15 * 60 * 1000);  // 15 min
+        const cancelAt = createdAt + (30 * 60 * 1000);       // 30 min
+        
+        function updateExpiry() {
+            const now = new Date().getTime();
+            const remaining = cancelAt - now;
+            
+            if (remaining <= 0) {
+                location.reload();
+                return;
+            }
+            
+            const mins = Math.floor(remaining / (1000 * 60));
+            const secs = Math.floor((remaining % (1000 * 60)) / 1000);
+            document.getElementById('countdown').textContent = 
+                `${mins}:${secs.toString().padStart(2, '0')}`;
+            
+            const title = document.getElementById('expiryTitle');
+            const msg = document.getElementById('expiryMessage');
+            const notice = document.getElementById('expiryNotice');
+            
+            if (now >= rebroadcastAt) {
+                // Phase 2: Rebroadcasting
+                title.textContent = '🔍 Expanding search to more professionals...';
+                msg.textContent = 'Original workers are busy. Finding more experts in your area.';
+                notice.className = 'expiry-notice rebroadcasting';
+            } else {
+                // Phase 1: Initial waiting
+                title.textContent = '⏳ Waiting for worker response...';
+                msg.textContent = 'We\'ve notified 3 nearby professionals. They\'ll respond shortly.';
+                notice.className = 'expiry-notice waiting';
+            }
+        }
+        
+        updateExpiry();
+        setInterval(updateExpiry, 1000);
+    </script>
+    {% endif %}
+
+    <!-- ✅ CANCELLED NOTICE -->
+    {% if booking.status == 'Cancelled' %}
+    <div class="card">
+        <div class="expiry-notice cancelled">
+            <div class="expiry-header">
+                <i class="fas fa-times-circle expiry-icon" style="color:#b91c1c;"></i>
+                <div>
+                    <strong class="expiry-title" style="color:#7f1d1d;">Booking Expired</strong>
+                    <p class="expiry-message" style="color:#991b1b;">
+                        No workers were available. Please try booking again or select a different time.
+                    </p>
+                </div>
+            </div>
+            <a href="{{ url_for('services') }}" class="btn btn-primary" style="margin-top:12px;background:#ef4444;">
+                <i class="fas fa-redo"></i> Book Again
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ✅ WORKER CARD (Only when assigned) -->
+    {% if booking.assigned_worker_id and s in ['Assigned', 'Arrived', 'In Progress', 'Completed'] %}
+    <div class="card">
+        <div class="worker-card show">
+            <div class="w-header">
+                {% if booking.worker_photo and booking.worker_photo != 'default.jpg' %}
+                    <img src="{{ url_for('static', filename='uploads/workers/' + booking.worker_photo) }}" 
+                         alt="{{ booking.worker_name }}" class="w-photo"
+                         onerror="this.src='https://ui-avatars.com/api/?name={{ booking.worker_name|urlencode }}&background=6366f1&color=fff&size=100'">
+                {% else %}
+                    <img src="https://ui-avatars.com/api/?name={{ booking.worker_name|urlencode }}&background=6366f1&color=fff&size=100" 
+                         alt="{{ booking.worker_name }}" class="w-photo">
+                {% endif %}
+                <div>
+                    <div class="w-name">
+                        {{ booking.worker_name or 'Professional' }}
+                        {% if booking.verified_badge %} 
+                            <span class="w-badge"><i class="fas fa-check-circle"></i> Verified</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="w-meta">
+                <div><i class="fas fa-phone"></i> {{ booking.worker_phone or 'Contact via app' }}</div>
+                <div><i class="fas fa-star"></i> {{ booking.rating or 'New' }}</div>
+                <div><i class="fas fa-wrench"></i> {{ booking.service_name }}</div>
+                <div><i class="fas fa-clock"></i> ~1-2 hrs</div>
+            </div>
+            
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ✅ BOOKING DETAILS -->
+    <div class="card details-card">
+        <div class="details-title"><i class="fas fa-clipboard-list"></i> Booking Summary</div>
+        <div class="d-row"><span class="d-label">Service</span><span class="d-value">{{ booking.service_name }}</span></div>
+        <div class="d-row"><span class="d-label">Date & Time</span><span class="d-value">{{ booking.booking_date }} • {{ booking.booking_time }}</span></div>
+        <div class="d-row"><span class="d-label">Location</span><span class="d-value">{{ booking.area }}{% if booking.address %}<br><small style="color:var(--gray)">{{ booking.address }}</small>{% endif %}</span></div>
+        <div class="d-row"><span class="d-label">Base Price</span><span class="d-value">₹{{ booking.base_price or 0 }}</span></div>
+        {% if booking.extra_charges and booking.extra_charges > 0 %}
+        <div class="d-row"><span class="d-label">Extra Charges</span><span class="d-value">+ ₹{{ booking.extra_charges }}</span></div>
+        {% if booking.extra_charges_note %}<div class="extra-note"><i class="fas fa-info-circle"></i> {{ booking.extra_charges_note }}</div>{% endif %}
+        {% endif %}
+        <div class="d-row total-row"><span class="d-label">Total Amount</span><span class="d-value total-value">₹{{ (booking.base_price or 0) + (booking.extra_charges or 0) }}</span></div>
+    </div>
+
+    <!-- ✅ ACTION BUTTONS -->
+    <div class="card actions">
+        {% if s == 'Completed' and booking.payment_status != 'Paid' %}
+            <a href="{{ url_for('payment', booking_id=booking.id) }}" class="btn btn-pay">
+                <i class="fas fa-credit-card"></i> Pay ₹{{ (booking.base_price or 0) + (booking.extra_charges or 0) }} Now
+            </a>
+        {% elif booking.payment_status == 'Paid' %}
+            {% if not booking.rating %}
+                <a href="{{ url_for('feedback', booking_id=booking.id) }}" class="btn btn-primary">
+                    <i class="fas fa-star"></i> Rate Now
+                </a>
+            {% else %}
+                <button class="btn btn-primary" disabled>
+                    <i class="fas fa-check"></i> Rated {{ booking.rating }}/5
+                </button>
+            {% endif %}
+            <a href="{{ url_for('my_bookings') }}" class="btn btn-outline" style="margin-top:8px">
+                <i class="fas fa-arrow-left"></i> Back to Bookings
+            </a>
+        {% else %}
+            <button class="btn btn-outline" onclick="location.reload()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <a href="{{ url_for('my_bookings') }}" class="btn btn-outline">
+                <i class="fas fa-list"></i> My Bookings
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Progress bar logic
+const currentStatus = "{{ s }}";
+const steps = ['Pending', 'Assigned', 'Arrived', 'In Progress', 'Completed'];
+const currentIdx = steps.indexOf(currentStatus);
+document.getElementById('progressFill').style.width = (currentIdx >= 0 ? (currentIdx + 1) * 16.67 : 20) + '%';
+document.querySelectorAll('.p-step').forEach((el, i) => {
+    const dot = el.querySelector('.p-dot'), label = el.querySelector('.p-label');
+    if (i < currentIdx) { dot.classList.add('completed'); label.classList.add('completed'); }
+    else if (i === currentIdx) { dot.classList.add('active'); label.classList.add('active'); }
+});
+
+// Auto-refresh every 12 seconds
+async function pollStatus() {
+    try {
+        const res = await fetch(`/api/booking_status/{{ booking.id }}`);
+        const data = await res.json();
+        if (data.status && data.status !== currentStatus) location.reload();
+    } catch(e) {}
+}
+setInterval(pollStatus, 12000);
+</script>
+</body>
+</html>

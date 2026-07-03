@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users | HomeServe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --accent: #6366f1;
+            --accent-light: #e0e7ff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --danger: #ef4444;
+            --danger-light: #fef2f2;
+            --shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            --radius: 16px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            padding: 28px;
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+        .top-bar h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .back-btn {
+            padding: 10px 18px;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+        
+        .table-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 850px; }
+        th {
+            background: #f8fafc;
+            padding: 16px 18px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+        td {
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            vertical-align: middle;
+            transition: background 0.15s ease;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafbfc; }
+        
+        .user-row { display: flex; align-items: center; gap: 12px; }
+        .avatar {
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 14px; flex-shrink: 0;
+        }
+        .meta { line-height: 1.4; }
+        .meta-main { font-weight: 600; color: var(--text-main); }
+        .meta-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        
+        .badge {
+            padding: 5px 10px;
+            border-radius: 99px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .badge-active { background: var(--success-light); color: #047857; }
+        .badge-blocked { background: var(--danger-light); color: #b91c1c; }
+        .badge-count { background: var(--accent-light); color: var(--accent); font-weight: 800; }
+        
+        .action-cell { position: relative; text-align: center; }
+        .action-btn {
+            width: 34px; height: 34px;
+            background: transparent; border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text-muted); cursor: pointer;
+            transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .action-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+        .dropdown {
+            position: absolute; right: 0; top: calc(100% + 8px);
+            background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+            min-width: 160px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); display: none; z-index: 50; overflow: hidden;
+        }
+        .dropdown.show { display: block; animation: fadeUp 0.2s ease forwards; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .dropdown button {
+            width: 100%; padding: 12px 16px; background: none; border: none;
+            text-align: left; color: var(--text-main); font-size: 13px; cursor: pointer; transition: 0.15s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .dropdown button:hover { background: #f8fafc; }
+        .dropdown .danger { color: var(--danger); }
+        .dropdown .danger:hover { background: var(--danger-light); }
+        
+        .empty { text-align: center; padding: 56px 24px; color: var(--text-muted); }
+        .empty i { font-size: 42px; margin-bottom: 14px; opacity: 0.25; }
+        .empty h3 { font-size: 18px; margin-bottom: 6px; color: var(--text-main); }
+        
+        @media (max-width: 820px) {
+            .top-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+            th, td { padding: 12px 10px; }
+            table { min-width: 700px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="toast" style="position:fixed;top:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:360px;pointer-events:none;"></div>
+    
+    <div class="top-bar">
+        <h1><i class="fas fa-users"></i> Customer Management</h1>
+        <a href="{{ url_for('admin_dashboard') }}" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+    </div>
+
+    <div class="table-card">
+        {% if users %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Contact</th>
+                        <th>Area</th>
+                        <th>Total Bookings</th>
+                        <th>Last Active</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>
+                            <div class="user-row">
+                                <div class="avatar">{{ u.full_name[:1]|upper }}</div>
+                                <div>
+                                    <div class="meta-main">{{ u.full_name }}</div>
+                                    <div class="meta-sub">ID: #{{ u.id }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="meta-main">{{ u.email }}</div>
+                            <div class="meta-sub">{{ u.phone or 'No phone' }}</div>
+                        </td>
+                        <td>{{ u.area or 'Global' }}</td>
+                        <td><span class="badge badge-count">{{ u.booking_count }}</span></td>
+                        <td>{{ u.last_booking.strftime('%b %d, %Y') if u.last_booking else 'Never' }}</td>
+                        <td>
+                            <span class="badge {{ 'badge-active' if u.is_active else 'badge-blocked' }}">
+                                {{ 'Active' if u.is_active else 'Blocked' }}
+                            </span>
+                        </td>
+                        <td class="action-cell">
+                            <button class="action-btn" onclick="toggleDrop(this)" aria-label="Actions"><i class="fas fa-ellipsis"></i></button>
+                            <div class="dropdown">
+                                <form class="ajax-form"><input type="hidden" name="user_id" value="{{ u.id }}">
+                                {% if u.is_active %}
+                                <input type="hidden" name="action" value="block">
+                                <button><i class="fas fa-user-slash"></i> Block User</button>
+                                {% else %}
+                                <input type="hidden" name="action" value="activate">
+                                <button style="color:var(--success)"><i class="fas fa-user-check"></i> Activate</button>
+                                {% endif %}
+                                <div style="height:1px;background:var(--border);margin:4px 0"></div>
+                                <input type="hidden" name="action" value="delete">
+                                <button class="danger" onclick="return confirm('Permanently delete this user and all related data?')"><i class="fas fa-trash-can"></i> Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty">
+            <i class="fas fa-user-group"></i>
+            <h3>No customers found</h3>
+            <p>Registered users will automatically populate this table.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleDrop(btn) {
+            document.querySelectorAll('.dropdown.show').forEach(d => d.classList.remove('show'));
+            const drop = btn.nextElementSibling;
+            drop.classList.toggle('show');
+        }
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.action-cell')) document.querySelectorAll('.dropdown.show').forEach(d => d.classList.remove('show'));
+        });
+
+        document.querySelectorAll('.ajax-form').forEach(form => {
+            form.addEventListener('submit', async e => {
+                e.preventDefault();
+                const btn = form.querySelector('button');
+                const orig = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+                try {
+                    const res = await fetch('{{ url_for("manage_users") }}', {
+                        method: 'POST', body: new FormData(form), headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    const d = await res.json();
+                    if (d.success) { toast(d.message, 'success'); setTimeout(() => location.reload(), 900); }
+                    else { toast(d.message || 'Action failed', 'error'); btn.disabled = false; btn.innerHTML = orig; }
+                } catch { toast('Network error', 'error'); btn.disabled = false; btn.innerHTML = orig; }
+            });
+        });
+
+        function toast(msg, type = 'info') {
+            const c = document.getElementById('toast');
+            const s = { success: { bg: '#10b981' }, error: { bg: '#ef4444' }, info: { bg: '#3b82f6' } }[type];
+            const el = document.createElement('div');
+            el.style.cssText = `padding:14px 18px;border-radius:12px;background:${s.bg};color:#fff;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.15);animation:slide 0.25s ease;pointer-events:auto;`;
+            el.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'circle-exclamation' : 'info-circle'}"></i> ${msg}`;
+            c.appendChild(el);
+            setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(-8px)'; setTimeout(() => el.remove(), 200); }, 3000);
+        }
+    </script>
+    <style>@keyframes slide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>
+</body>
+</html>

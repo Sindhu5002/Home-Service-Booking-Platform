@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Payment | HomeServe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #5e60ce;
+            --primary-dark: #484b9a;
+            --success: #10b981;
+            --success-light: #dcfce7;
+            --dark: #1a1c2e;
+            --gray: #64748b;
+            --light-bg: #f4f7fe;
+            --card-white: #ffffff;
+            --border-color: #e2e8f0;
+            --shadow: 0 20px 40px rgba(0,0,0,0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--light-bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(94, 96, 206, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--dark);
+        }
+
+        .payment-card {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-white);
+            border-radius: 32px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            animation: cardSlide 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes cardSlide {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            padding: 40px 30px 20px;
+            text-align: center;
+        }
+
+        .header .brand-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), #7400b8);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 10px 20px rgba(94, 96, 206, 0.2);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .header p { color: var(--gray); font-size: 14px; }
+
+        .content { padding: 0 30px 40px; }
+
+        /* Receipt Section */
+        .order-summary {
+            background: #f8fafc;
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .summary-row.total {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed var(--border-color);
+            color: var(--dark);
+            font-weight: 800;
+            font-size: 20px;
+        }
+
+        .extra-badge {
+            background: #fffbeb;
+            color: #b45309;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin: 10px 0;
+            border-left: 4px solid #f59e0b;
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Payment Methods */
+        .methods-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gray);
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .method-list {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .method-item {
+            position: relative;
+            padding: 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .method-item:hover { border-color: var(--primary); background: rgba(94, 96, 206, 0.02); }
+
+        .method-item input { display: none; }
+
+        .method-item.selected {
+            border-color: var(--primary);
+            background: rgba(94, 96, 206, 0.04);
+        }
+
+        .method-item i {
+            width: 40px;
+            height: 40px;
+            background: #f1f5f9;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--primary);
+            transition: 0.3s;
+        }
+
+        .method-item.selected i { background: var(--primary); color: white; }
+
+        .method-name { font-weight: 700; font-size: 15px; flex-grow: 1; }
+
+        .method-check {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: transparent;
+        }
+
+        .method-item.selected .method-check {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .btn-pay {
+            width: 100%;
+            padding: 20px;
+            border: none;
+            border-radius: 20px;
+            background: var(--dark);
+            color: white;
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(26, 28, 46, 0.15);
+        }
+
+        .btn-pay:hover { background: #000; transform: translateY(-2px); }
+        .btn-pay:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+        .secure-footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            margin-top: 20px;
+            font-size: 11px;
+            color: var(--gray);
+            font-weight: 600;
+        }
+
+        /* ✅ REAL-WORLD PAYMENT SUCCESS OVERLAY */
+        #successOverlay {
+            position: fixed;
+            inset: 0;
+            background: #ffffff;
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* Success checkmark animation */
+        .checkmark-wrapper {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin-bottom: 30px;
+        }
+
+        .checkmark-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--success-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .checkmark-circle.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        @keyframes scaleIn {
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .checkmark-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--success);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s forwards;
+            opacity: 0;
+            transform: scale(0.5);
+        }
+
+        .checkmark-icon.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        @keyframes popIn {
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Confetti particles */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: confettiFall 2s ease-in-out forwards;
+            opacity: 0;
+        }
+
+        .confetti:nth-child(1) { background: #10b981; left: 20%; animation-delay: 0.1s; }
+        .confetti:nth-child(2) { background: #3b82f6; left: 40%; animation-delay: 0.2s; }
+        .confetti:nth-child(3) { background: #8b5cf6; left: 60%; animation-delay: 0.3s; }
+        .confetti:nth-child(4) { background: #f59e0b; left: 80%; animation-delay: 0.4s; }
+        .confetti:nth-child(5) { background: #10b981; left: 30%; animation-delay: 0.5s; }
+
+        @keyframes confettiFall {
+            0% { opacity: 1; transform: translateY(-20px) rotate(0deg); }
+            100% { opacity: 0; transform: translateY(100px) rotate(720deg); }
+        }
+
+        .success-content {
+            max-width: 320px;
+            animation: slideUp 0.4s ease 0.3s forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .success-content.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .success-content h2 {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .success-content p {
+            color: var(--gray);
+            font-size: 15px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .amount-paid {
+            background: var(--success-light);
+            color: #047857;
+            padding: 12px 20px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 25px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .redirect-text {
+            color: var(--gray);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .redirect-text span {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        /* Loading state */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--dark);
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        @media (max-width: 500px) {
+            body { padding: 0; }
+            .payment-card { border-radius: 0; min-height: 100vh; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="payment-card">
+    <div class="header">
+        <div class="brand-icon">
+            <i class="fas fa-bolt"></i>
+        </div>
+        <h1>Checkout</h1>
+        <p>Confirm your booking details</p>
+    </div>
+
+    <div class="content">
+        <div class="order-summary">
+            <div class="summary-row">
+                <span>Service Type</span>
+                <span style="color: var(--dark); font-weight: 700;">{{ booking.service_name }}</span>
+            </div>
+            <div class="summary-row">
+                <span>Base Fee</span>
+                <span>₹{{ booking.base_price }}</span>
+            </div>
+
+            {% if booking.extra_charges and booking.extra_charges > 0 %}
+            <div class="summary-row">
+                <span>Additional Charges</span>
+                <span style="color: var(--success); font-weight: 600;">+ ₹{{ booking.extra_charges }}</span>
+            </div>
+            {% if booking.extra_charges_note %}
+            <div class="extra-badge">
+                <i class="fas fa-info-circle"></i>
+                <span>{{ booking.extra_charges_note }}</span>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <div class="summary-row total">
+                <span>Total Amount</span>
+                <span>₹{{ (booking.base_price or 0) + (booking.extra_charges or 0) }}</span>
+            </div>
+        </div>
+
+        <form id="paymentForm" action="{{ url_for('payment', booking_id=booking.id) }}" method="POST">
+            <span class="methods-title">Pay via</span>
+            
+            <div class="method-list">
+                <label class="method-item selected">
+                    <input type="radio" name="payment_method" value="Cash" checked>
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <span class="method-name">Pay by Cash</span>
+                    <div class="method-check"><i class="fas fa-check"></i></div>
+                </label>
+
+                <label class="method-item">
+                    <input type="radio" name="payment_method" value="UPI">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span class="method-name">UPI / Google Pay / PhonePe</span>
+                    <div class="method-check"><i class="fas fa-check"></i></div>
+                </label>
+
+                <label class="method-item">
+                    <input type="radio" name="payment_method" value="Card">
+                    <i class="fas fa-credit-card"></i>
+                    <span class="method-name">Debit or Credit Card</span>
+                    <div class="method-check"><i class="fas fa-check"></i></div>
+                </label>
+            </div>
+
+            <button type="submit" class="btn-pay" id="mainPayBtn">
+                Proceed to Pay ₹{{ (booking.base_price or 0) + (booking.extra_charges or 0) }}
+            </button>
+            
+            <div class="secure-footer">
+                <i class="fas fa-lock" style="color: var(--success)"></i>
+                <span>SECURE 256-BIT ENCRYPTED PAYMENT</span>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Processing payment...</div>
+</div>
+
+<!-- ✅ REAL-WORLD PAYMENT SUCCESS OVERLAY -->
+<div id="successOverlay">
+    <div class="checkmark-wrapper">
+        <!-- Confetti particles -->
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        
+        <!-- Animated checkmark -->
+        <div class="checkmark-circle">
+            <div class="checkmark-icon">
+                <i class="fas fa-check"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="success-content">
+        <h2>Payment Successful!</h2>
+        <p>Great news! Your payment has been confirmed and your booking is secured.</p>
+        
+        <div class="amount-paid">
+            <i class="fas fa-rupee-sign"></i>
+            ₹{{ (booking.base_price or 0) + (booking.extra_charges or 0) }}
+        </div>
+        
+        <p class="redirect-text">Redirecting to your bookings in <span id="countdown">3</span>s...</p>
+    </div>
+</div>
+
+<script>
+    // Handle Method Selection UI
+    const methodItems = document.querySelectorAll('.method-item');
+    methodItems.forEach(item => {
+        item.addEventListener('click', () => {
+            methodItems.forEach(i => i.classList.remove('selected'));
+            item.classList.add('selected');
+        });
+    });
+
+    // Form Submission with Real-World Payment Flow
+    document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('mainPayBtn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const successOverlay = document.getElementById('successOverlay');
+        
+        // Show loading state
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Processing...';
+        loadingOverlay.style.display = 'flex';
+
+        try {
+            const response = await fetch(e.target.action, {
+                method: 'POST',
+                body: new FormData(e.target),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                // Hide loading, show success
+                loadingOverlay.style.display = 'none';
+                successOverlay.style.display = 'flex';
+                
+                // Animate success elements
+                setTimeout(() => {
+                    document.querySelector('.checkmark-circle').classList.add('show');
+                    document.querySelector('.checkmark-icon').classList.add('show');
+                    document.querySelector('.success-content').classList.add('show');
+                }, 100);
+                
+                // Countdown and redirect
+                let count = 3;
+                const countdownEl = document.getElementById('countdown');
+                const interval = setInterval(() => {
+                    count--;
+                    countdownEl.textContent = count;
+                    if (count <= 0) {
+                        clearInterval(interval);
+                        window.location.href = data.redirect || '/my-bookings';
+                    }
+                }, 1000);
+                
+            } else {
+                // Hide loading, show error
+                loadingOverlay.style.display = 'none';
+                alert(data.message || 'Transaction declined. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = 'Proceed to Pay ₹{{ (booking.base_price or 0) + (booking.extra_charges or 0) }}';
+            }
+        } catch (error) {
+            console.error('Payment Error:', error);
+            loadingOverlay.style.display = 'none';
+            alert('Network connection lost. Please check your internet.');
+            btn.disabled = false;
+            btn.innerHTML = 'Proceed to Pay';
+        }
+    });
+</script>
+
+</body>
+</html>

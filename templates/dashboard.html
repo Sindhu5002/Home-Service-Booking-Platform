@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard | HomeServe</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    :root {
+        --primary: #6366f1; --primary-dark: #4f46e5; --primary-light: #818cf8;
+        --secondary: #10b981; --dark: #1e293b; --gray: #64748b; --light: #f8fafc;
+        --white: #ffffff; --border: #e2e8f0; --error: #ef4444; --success: #22c55e;
+        --warning: #f59e0b; --sidebar-bg: linear-gradient(180deg, #0f172a, #1e293b);
+        --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        --shadow-primary: 0 10px 40px -10px rgba(99, 102, 241, 0.4);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--light); color: var(--dark); overflow-x: hidden; line-height: 1.6; }
+
+    /* 🔔 Toast Container */
+    #toastContainer { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 100%; max-width: 420px; pointer-events: none; }
+    .toast-message { padding: 14px 18px; border-radius: 12px; margin: 8px auto; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); background: var(--white); border-left: 4px solid var(--primary); pointer-events: auto; animation: slideDown 0.3s ease, fadeOut 0.4s ease 4.6s forwards; }
+    .toast-message.success { border-left-color: var(--success); background: #f0fdf4; color: #166534; }
+    .toast-message.danger  { border-left-color: var(--error); background: #fef2f2; color: #991b1b; }
+    .toast-message.warning { border-left-color: var(--warning); background: #fffbeb; color: #92400e; }
+    @keyframes slideDown { from { transform: translate(-50%, -40px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+    @keyframes fadeOut { to { opacity: 0; transform: translate(-50%, -20px); } }
+
+    /* === SIDEBAR & OVERLAY === */
+    .sidebar { width: 280px; background: var(--sidebar-bg); height: 100vh; position: fixed; left: -280px; top: 0; z-index: 1500; padding: 25px 20px; display: flex; flex-direction: column; transition: var(--transition); box-shadow: var(--shadow-lg); }
+    .sidebar.active { left: 0; }
+    .sidebar-header { display: flex; align-items: center; gap: 12px; padding-bottom: 25px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); color: white; }
+    .sidebar-logo { font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .sidebar-logo i { color: var(--primary-light); }
+    .sidebar-close { background: rgba(255,255,255,0.1); border: none; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; transition: var(--transition); margin-left: auto; }
+    .sidebar-close:hover { background: var(--primary); transform: rotate(90deg); }
+    .nav-menu { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; color: #94a3b8; text-decoration: none; border-radius: 14px; font-weight: 500; font-size: 14px; transition: var(--transition); position: relative; }
+    .nav-item:hover, .nav-item.active { background: rgba(99, 102, 241, 0.2); color: white; }
+    .nav-item.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 70%; background: var(--primary-light); border-radius: 0 4px 4px 0; }
+    .nav-item i { width: 20px; text-align: center; font-size: 16px; }
+    .sidebar-footer { padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto; }
+    .sidebar-footer .nav-item { color: #fb7185; justify-content: center; font-weight: 600; }
+    .sidebar-footer .nav-item:hover { background: rgba(239, 68, 68, 0.15); }
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 1400; display: none; opacity: 0; transition: opacity 0.3s; }
+    .overlay.active { display: block; opacity: 1; }
+
+    /* === NAVBAR & PROFILE === */
+    .navbar { display: flex; justify-content: space-between; align-items: center; padding: 16px 5%; background: var(--white); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+    .menu-trigger { background: var(--light); border: none; width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: var(--transition); color: var(--dark); }
+    .menu-trigger:hover { background: var(--primary); color: white; transform: scale(1.05); }
+    .profile-container { position: relative; }
+    .profile-trigger { display: flex; align-items: center; gap: 12px; padding: 8px 14px; background: var(--light); border-radius: 30px; cursor: pointer; transition: var(--transition); border: 2px solid transparent; }
+    .profile-trigger:hover { border-color: var(--primary); background: white; box-shadow: var(--shadow-sm); }
+    .profile-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+    .profile-name { font-weight: 600; font-size: 14px; color: var(--dark); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .profile-dropdown { display: none; position: absolute; top: calc(100% + 12px); right: 0; width: 280px; background: white; border-radius: 20px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); padding: 20px; z-index: 2000; animation: slideDown 0.25s ease; }
+    .profile-dropdown.show { display: block; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .profile-header { text-align: center; padding-bottom: 18px; border-bottom: 1px solid var(--border); margin-bottom: 15px; }
+    .profile-avatar-large { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; font-size: 24px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; box-shadow: var(--shadow-primary); }
+    .profile-header h3 { font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+    .profile-header p { font-size: 13px; color: var(--gray); }
+    .profile-actions { display: flex; flex-direction: column; gap: 8px; }
+    .profile-btn { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: none; border: none; border-radius: 10px; font-size: 14px; font-weight: 500; color: var(--dark); cursor: pointer; transition: var(--transition); text-align: left; width: 100%; }
+    .profile-btn:hover { background: var(--light); color: var(--primary); }
+    .profile-btn.danger { color: var(--error); }
+    .profile-btn.danger:hover { background: #fee2e2; }
+    .profile-btn i { width: 18px; text-align: center; }
+
+    /* === HERO & WELCOME === */
+    .hero { height: 320px; background: linear-gradient(135deg, rgba(99,102,241,0.9), rgba(168,85,247,0.85)), url('https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&q=80&w=1200') center/cover; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; padding: 0 20px; position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 30% 70%, rgba(255,255,255,0.1) 0%, transparent 50%); animation: float 20s ease-in-out infinite; }
+    @keyframes float { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(2%, -2%); } }
+    .hero h1 { font-size: clamp(32px, 5vw, 48px); font-weight: 800; margin-bottom: 12px; line-height: 1.2; letter-spacing: -1px; position: relative; z-index: 1; }
+    .hero p { font-size: 18px; opacity: 0.95; max-width: 500px; position: relative; z-index: 1; }
+    .welcome-card { max-width: 1100px; margin: -40px auto 40px; background: white; border-radius: 24px; padding: 25px 30px; box-shadow: var(--shadow-md); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; position: relative; z-index: 10; }
+    .welcome-text h2 { font-size: 22px; font-weight: 800; color: var(--dark); margin-bottom: 6px; }
+    .welcome-text p { color: var(--gray); font-size: 14px; }
+    .welcome-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn { padding: 10px 20px; border-radius: 12px; font-weight: 600; font-size: 14px; text-decoration: none; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-primary); }
+    .btn-outline { background: transparent; color: var(--dark); border: 2px solid var(--border); }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+
+    /* === SERVICES SECTION (CLEAN CSS) === */
+    .services-section { max-width: 1100px; margin: 0 auto 50px; padding: 0 20px; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+    .section-title { font-size: 24px; font-weight: 800; color: var(--dark); display: flex; align-items: center; gap: 10px; }
+    .section-title i { color: var(--primary); }
+    .view-all { color: var(--primary); font-weight: 600; font-size: 14px; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+    .view-all:hover i { transform: translateX(4px); }
+
+    .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; width: 100%; }
+    .service-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; transition: transform 0.25s, box-shadow 0.25s; border: 1px solid var(--border); display: flex; flex-direction: column; height: 100%; }
+    .service-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); border-color: var(--primary); }
+    .service-image-box { width: 100%; height: 160px; overflow: hidden; background: linear-gradient(135deg, var(--primary), #8b5cf8); position: relative; }
+    .service-image-box img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+    .service-card:hover .service-image-box img { transform: scale(1.05); }
+    .service-fallback { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 10px; }
+    .service-fallback i { font-size: 28px; margin-bottom: 8px; opacity: 0.9; }
+    .service-fallback span { font-weight: 700; font-size: 14px; line-height: 1.3; }
+    .service-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+    .service-title { font-weight: 700; font-size: 16px; color: var(--dark); margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .service-desc { font-size: 13px; color: var(--gray); line-height: 1.4; margin-bottom: 12px; flex: 1; }
+    .service-price { font-weight: 700; color: var(--primary); font-size: 15px; margin-top: auto; }
+
+    /* === MORE SERVICES CARD === */
+    .more-card { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; overflow: hidden; }
+    .more-card-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 30px 20px; text-align: center; width: 100%; box-sizing: border-box; }
+    .more-card-icon { width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 16px; transition: transform 0.3s ease; }
+    .more-card-title { font-weight: 700; font-size: 18px; color: #fff; margin-bottom: 8px; line-height: 1.3; }
+    .more-card-desc { font-size: 13px; color: rgba(255,255,255,0.9); margin-bottom: 16px; line-height: 1.4; max-width: 90%; }
+    .more-card-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 13px; font-weight: 600; color: #fff; transition: all 0.2s ease; text-decoration: none; cursor: pointer; }
+    .more-card:hover .more-card-icon { transform: rotate(10deg) scale(1.1); }
+    .more-card:hover .more-card-btn { background: rgba(255,255,255,0.3); transform: translateY(-2px); }
+    .more-card:hover .more-card-btn i { transform: translateX(4px); }
+
+    /* === ACTIVITY & FOOTER === */
+    .activity-section { max-width: 1100px; margin: 0 auto 60px; padding: 0 20px; }
+    .activity-list { background: white; border-radius: 20px; box-shadow: var(--shadow-sm); overflow: hidden; }
+    .activity-item { display: flex; align-items: center; gap: 16px; padding: 18px 24px; border-bottom: 1px solid var(--border); transition: background 0.2s; }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-item:hover { background: var(--light); }
+    .activity-icon { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .activity-icon.pending { background: #fff7ed; color: #9a3412; }
+    .activity-icon.completed { background: #dcfce7; color: #15803d; }
+    .activity-icon.active { background: #dbeafe; color: #1e40af; }
+    .activity-info { flex: 1; }
+    .activity-info h4 { font-size: 15px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+    .activity-info p { font-size: 13px; color: var(--gray); }
+    .activity-time { font-size: 12px; color: var(--gray); font-weight: 500; }
+    footer { text-align: center; padding: 30px; color: var(--gray); font-size: 13px; border-top: 1px solid var(--border); background: white; margin-top: 40px; }
+
+    /* === REVEAL & RESPONSIVE === */
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .reveal.active { opacity: 1; transform: translateY(0); }
+    @media (max-width: 1024px) { .welcome-card { flex-direction: column; text-align: center; } .welcome-actions { justify-content: center; } }
+    @media (max-width: 768px) {
+        .navbar { padding: 14px 4%; }
+        .hero { height: 280px; }
+        .hero h1 { font-size: clamp(28px, 6vw, 36px); }
+        .services-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+        .profile-dropdown { width: 260px; right: -10px; }
+        .more-card-inner { padding: 25px 15px; }
+        .more-card-icon { width: 50px; height: 50px; font-size: 20px; }
+    }
+    @media (max-width: 480px) {
+        .sidebar { width: 260px; left: -260px; }
+        .services-grid { grid-template-columns: 1fr; }
+        .section-header { flex-direction: column; align-items: flex-start; }
+    }
+</style>
+</head>
+<body>
+
+    <!-- 🔔 Toast Container -->
+    <div id="toastContainer">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, msg in messages %}
+                    <div class="toast-message {{ category }}">
+                        <span style="font-size:18px">
+                            {% if category=='success' %}✅{% elif category=='danger' %}⚠️{% elif category=='warning' %}ℹ️{% else %}💬{% endif %}
+                        </span>
+                        <span>{{ msg }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo"><i class="fas fa-house-chimney"></i> HomeServe</div>
+            <button class="sidebar-close" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="nav-menu">
+            <a href="{{ url_for('dashboard') }}" class="nav-item active"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="{{ url_for('services') }}" class="nav-item"><i class="fas fa-tools"></i> All Services</a>
+            <a href="/track" class="nav-item"><i class="fas fa-tools"></i> Track Status</a>
+             <a href="{{ url_for('my_bookings') }}" class="nav-item"><i class="fas fa-clipboard-list"></i> My Bookings</a>
+        </div>
+        <div class="sidebar-footer">
+            <a href="{{ url_for('logout') }}" class="nav-item"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </nav>
+
+    <!-- Navbar -->
+    <header class="navbar">
+        <button class="menu-trigger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+        <div class="profile-container">
+            <div class="profile-trigger" id="profileToggle">
+                <div class="profile-avatar" id="navInitial">{{ (user.full_name or user.email or 'U')[0].upper() }}</div>
+                <span class="profile-name" id="navName">{{ user.full_name or user.email or 'User' }}</span>
+                <i class="fas fa-chevron-down" style="font-size: 12px; color: var(--gray);"></i>
+            </div>
+            <div class="profile-dropdown" id="profileDropdown">
+                <div class="profile-header">
+                    <div class="profile-avatar-large">{{ (user.full_name or user.email or 'U')[0].upper() }}</div>
+                    <h3>{{ user.full_name or user.email or 'User' }}</h3>
+                    <p>{{ user.email or 'user@email.com' }}</p>
+                </div>
+                <div class="profile-actions">
+                    <button class="profile-btn" onclick="goToMyBookings()"><i class="fas fa-clipboard-list"></i> My Bookings</button>
+                    <button class="profile-btn"><i class="fas fa-cog"></i> Account Settings</button>
+                    <button class="profile-btn danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+        <h1>Expert help, one click away.</h1>
+        <p>Book trusted professionals for your home — fast, secure, and reliable.</p>
+    </section>
+
+    <!-- Welcome Card -->
+    <div class="welcome-card reveal">
+        <div class="welcome-text">
+            <h2>👋 Welcome , <span>{{ user.full_name or user.email or 'Friend' }}</span>!</h2>
+            <p>What would you like to get done today?</p>
+        </div>
+        <div class="welcome-actions">
+            <a href="{{ url_for('services') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Book a Service</a>
+            <a href="{{ url_for('my_bookings') }}" class="btn btn-outline"><i class="fas fa-list"></i> View Bookings</a>
+        </div>
+    </div>
+
+    <!-- Services Section (CLEAN & FIXED) -->
+    <div class="services-section reveal">
+        <div class="section-header">
+            <h2 class="section-title"><i class="fas fa-tools"></i> Popular Services</h2>
+            <a href="{{ url_for('services') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+
+        <div class="services-grid">
+            {% for service in services %}
+            <div class="service-card" onclick="bookService('{{ service.id }}', '{{ service.name }}')">
+                <div class="service-image-box" data-service-name="{{ service.name }}">
+                    {% if service.image %}
+                        {% set p = service.image or 'default.jpg' %}
+{% if '/' not in p %}{% set p = 'services/' + p %}{% endif %}
+<img src="{{ url_for('static', filename='uploads/' + p) }}" 
+     alt="{{ service.name }}" class="service-img"
+     onerror="this.onerror=null; this.src='https://via.placeholder.com/400x240/6366f1/ffffff?text=Service';">
+                    {% else %}
+                        <div class="service-fallback"><i class="fas fa-tools"></i><span>{{ service.name[:12] }}{% if service.name|length > 12 %}...{% endif %}</span></div>
+                    {% endif %}
+                </div>
+                <div class="service-body">
+                    <div class="service-title">{{ service.name }}</div>
+                    <div class="service-desc">{{ service.description or 'Professional service at your doorstep' }}</div>
+                    <div class="service-price">From ₹{{ service.price }}</div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <!-- More Services Card -->
+            <div class="service-card more-card" onclick="goToServices()">
+                <div class="more-card-inner">
+                    <div class="more-card-icon"><i class="fas fa-th-large"></i></div>
+                    <div class="more-card-title">Explore More</div>
+                    <div class="more-card-desc">Discover all {{ services|length + 5 }}+ services we offer</div>
+                    <div class="more-card-btn">View Catalog <i class="fas fa-arrow-right"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="activity-section">
+        <div class="section-header">
+            <h2 class="section-title"><i class="fas fa-clock-rotate-left"></i> Recent Activity</h2>
+        </div>
+        <div class="activity-list">
+            {% if recent_bookings %}
+                {% for booking in recent_bookings[:3] %}
+                <div class="activity-item">
+                    <div class="activity-icon {{ 'completed' if booking.status == 'Settled' else 'active' if booking.status == 'assigned' else 'pending' }}">
+                        <i class="fas fa-{{ 'check' if booking.status == 'Settled' else 'truck' if booking.status == 'assigned' else 'clock' }}"></i>
+                    </div>
+                    <div class="activity-info">
+                        <h4>{{ booking.service_name or 'Service' }}</h4>
+                        <p>{{ booking.area }} • {{ booking.booking_date }}</p>
+                    </div>
+                    <div class="activity-time">{{ booking.status }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="activity-item" style="justify-content: center; color: var(--gray);">
+                    <i class="fas fa-inbox" style="margin-right: 10px;"></i> No recent activity. Book your first service!
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2026 HomeServe. All rights reserved. • <a href="#" style="color: var(--primary); text-decoration: none;">Privacy</a> • <a href="#" style="color: var(--primary); text-decoration: none;">Terms</a></p>
+    </footer>
+
+    <script>
+        // === SIDEBAR TOGGLE ===
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+            document.body.style.overflow = document.getElementById('sidebar').classList.contains('active') ? 'hidden' : '';
+        }
+
+        // === PROFILE DROPDOWN ===
+        const profileToggle = document.getElementById('profileToggle');
+        const profileDropdown = document.getElementById('profileDropdown');
+        profileToggle.addEventListener('click', (e) => { e.stopPropagation(); profileDropdown.classList.toggle('show'); });
+        document.addEventListener('click', (e) => { if (!profileToggle.contains(e.target) && !profileDropdown.contains(e.target)) profileDropdown.classList.remove('show'); });
+
+        // === NAVIGATION ===
+        function goToMyBookings() { window.location.href = "{{ url_for('my_bookings') }}"; }
+        function goToServices() { window.location.href = "{{ url_for('services') }}"; }
+        function bookService(id, name) { window.location.href = `/book/${id}`; }
+        function logout() { window.location.href = "{{ url_for('logout') }}"; }
+
+        // === IMAGE FALLBACK ===
+        function handleImageError(img) {
+            const box = img.parentElement;
+            const name = box.dataset.serviceName || 'Service';
+            const short = name.length > 12 ? name.slice(0, 12) + '...' : name;
+            box.innerHTML = `<div class="service-fallback"><i class="fas fa-tools"></i><span>${short}</span></div>`;
+        }
+
+        // === REVEAL ON SCROLL ===
+        function revealOnScroll() {
+            document.querySelectorAll('.reveal').forEach(el => {
+                if (el.getBoundingClientRect().top < window.innerHeight - 100) el.classList.add('active');
+            });
+        }
+        window.addEventListener('load', revealOnScroll);
+        window.addEventListener('scroll', revealOnScroll);
+
+        // === KEYBOARD SHORTCUTS ===
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.getElementById('sidebar').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+                profileDropdown.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        });
+    </script>
+</body>
+</html>

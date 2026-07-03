@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Profile | HomeServe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0ea5e9; --primary-dark: #0284c7; --primary-light: #e0f2fe;
+            --success: #10b981; --success-light: #d1fae5; --success-dark: #059669;
+            --warning: #f59e0b; --warning-light: #fef3c7;
+            --danger: #ef4444; --dark: #0f172a; --dark-light: #1e293b;
+            --gray: #64748b; --gray-light: #f8fafc; --white: #ffffff;
+            --border: #e2e8f0; --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+            --radius: 14px; --transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .verified-theme { --primary: #10b981; --primary-dark: #059669; --primary-light: #d1fae5; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--gray-light); color: var(--dark); min-height: 100vh; overflow-x: hidden; }
+
+        /* === HEADER === */
+        .topbar { background: var(--white); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; }
+        .topbar-left { display: flex; align-items: center; gap: 12px; }
+        .back-btn { 
+            background: var(--gray-light); color: var(--dark); border: 1px solid var(--border); 
+            padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; 
+            text-decoration: none; font-size: 13px; transition: var(--transition); 
+            display: inline-flex; align-items: center; gap: 6px; 
+        }
+        .back-btn:hover { background: var(--border); transform: translateY(-1px); }
+        
+        .greeting h1 { font-size: 22px; font-weight: 800; margin-bottom: 2px; }
+        .greeting p { font-size: 13px; color: var(--gray); }
+        .top-actions { display: flex; align-items: center; gap: 14px; }
+        .toggle-pill { display: flex; align-items: center; gap: 8px; background: var(--gray-light); padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); cursor: pointer; transition: var(--transition); font-weight: 600; font-size: 12px; }
+        .toggle-pill.online { background: var(--success-light); border-color: var(--success); color: var(--success-dark); }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; transition: var(--transition); }
+        .toggle-pill.online .dot { background: var(--success); }
+        .logout-btn { background: var(--danger); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: var(--transition); text-decoration: none; font-size: 12px; }
+        .logout-btn:hover { background: #dc2626; transform: translateY(-1px); }
+
+        /* === PROFILE GRID === */
+        .content { padding: 24px; max-width: 1200px; margin: 0 auto; }
+        .profile-grid { display: grid; grid-template-columns: 320px 1fr; gap: 24px; }
+        .card { background: var(--white); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+        .card-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; color: var(--dark); }
+        .card-title i { color: var(--primary); }
+
+        .avatar-large { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-light); margin-bottom: 16px; display: block; }
+        .info-list { list-style: none; }
+        .info-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .info-item:last-child { border-bottom: none; }
+        .info-label { color: var(--gray); font-weight: 500; }
+        .info-value { font-weight: 600; text-align: right; max-width: 60%; word-break: break-word; }
+        
+        .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .status-badge.pending { background: var(--warning-light); color: #b45309; }
+        .status-badge.approved { background: var(--success-light); color: var(--success-dark); }
+        .status-badge.rejected { background: var(--danger-light); color: var(--danger); }
+
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--gray); margin-bottom: 6px; }
+        .form-group input { width: 100%; padding: 11px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; background: var(--gray-light); transition: var(--transition); font-family: inherit; }
+        .form-group input:focus { outline: none; border-color: var(--primary); background: var(--white); }
+        .form-group input[readonly] { background: #f1f5f9; color: var(--gray); cursor: not-allowed; }
+
+        .photo-upload { border: 2px dashed var(--border); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: var(--transition); background: var(--gray-light); }
+        .photo-upload:hover { border-color: var(--primary); background: var(--primary-light); }
+        .photo-upload i { font-size: 24px; color: var(--primary); margin-bottom: 8px; }
+        .photo-upload p { font-size: 13px; color: var(--gray); margin: 0; }
+        .preview-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid var(--white); box-shadow: var(--shadow-sm); display: block; }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { padding: 11px 20px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: var(--transition); text-decoration: none; text-align: center; border: none; }
+        .btn-primary { background: var(--primary); color: white; flex: 1; }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--gray); }
+        .btn-outline:hover { border-color: var(--gray); color: var(--dark); }
+
+        /* Toast */
+        #toastContainer { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 90%; max-width: 420px; pointer-events: none; display: flex; flex-direction: column; align-items: center; }
+        .toast-msg { width: 100%; padding: 14px 18px; margin: 6px 0; border-radius: 12px; font-size: 14px; font-weight: 600; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.12); background: white; border-left: 5px solid var(--primary); pointer-events: auto; opacity: 0; transform: translateY(-15px); transition: opacity 0.25s ease, transform 0.25s ease; }
+        .toast-msg.visible { opacity: 1; transform: translateY(0); }
+        .toast-msg.success { border-left-color: var(--success); background: #f0fdf4; color: #166534; }
+        .toast-msg.danger { border-left-color: var(--danger); background: #fef2f2; color: #991b1b; }
+
+        @media (max-width: 899px) { 
+            .profile-grid { grid-template-columns: 1fr; } 
+            .topbar { flex-direction: column; align-items: flex-start; gap: 14px; }
+            .topbar-left, .topbar-right { width: 100%; }
+            .topbar-right { justify-content: space-between; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Toast -->
+<div id="toastContainer"></div>
+
+<main class="main {% if worker.status == 'Approved' %}verified-theme{% endif %}">
+    <header class="topbar">
+        <div class="topbar-left">
+            <!-- ✅ Back to Dashboard Button -->
+            <a href="{{ url_for('worker_dashboard') }}" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <div class="greeting"><h1>My Profile</h1><p>Manage your account details & contact info</p></div>
+        </div>
+        <div class="top-actions">
+            <button class="toggle-pill {% if worker.is_online %}online{% endif %}" id="statusToggle" onclick="toggleOnline()"><span class="dot"></span><span>{% if worker.is_online %}Online{% else %}Offline{% endif %}</span></button>
+            <a href="{{ url_for('worker_logout') }}" class="logout-btn"><i class="fas fa-power-off"></i></a>
+        </div>
+    </header>
+
+    <div class="content">
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('worker_profile') }}">
+            <div class="profile-grid">
+                <!-- Left: Read-Only Info -->
+                <div class="card">
+                    <h3 class="card-title"><i class="fas fa-id-card"></i> Account Details</h3>
+                    
+                    <!-- ✅ Simple, linter-safe large avatar -->
+                    <img src="{{ url_for('static', filename='uploads/workers/' + (worker.photo or 'default.jpg')) }}" 
+                         alt="{{ worker.name }}" 
+                         class="avatar-large"
+                         onerror="this.src='https://ui-avatars.com/api/?name={{ worker.name|urlencode }}&background=0ea5e9&color=fff&size=220'">
+                    
+                    <ul class="info-list">
+                        <li class="info-item"><span class="info-label">Full Name</span><span class="info-value">{{ worker.name }}</span></li>
+                        <li class="info-item"><span class="info-label">Email</span><span class="info-value">{{ worker.email }}</span></li>
+                        <li class="info-item"><span class="info-label">Aadhar</span><span class="info-value">{{ worker.aadhar[:4] + 'XXXXX' + worker.aadhar[-4:] if worker.aadhar and worker.aadhar|length > 8 else 'N/A' }}</span></li>
+                        <li class="info-item"><span class="info-label">Service</span><span class="info-value">{{ worker.service_name or 'N/A' }}</span></li>
+                        <li class="info-item"><span class="info-label">Gender</span><span class="info-value">{{ worker.gender.capitalize() if worker.gender else 'N/A' }}</span></li>
+                        <li class="info-item"><span class="info-label">Experience</span><span class="info-value">{{ worker.experience }} Years</span></li>
+                        <li class="info-item"><span class="info-label">Status</span><span class="info-value"><span class="status-badge {{ worker.status|lower }}">{{ worker.status }}</span></span></li>
+                    </ul>
+                </div>
+
+                <!-- Right: Editable Form -->
+                <div class="card">
+                    <h3 class="card-title"><i class="fas fa-pen-to-square"></i> Update Information</h3>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" name="phone" value="{{ worker.phone or '' }}" required pattern="[0-9]{10}" placeholder="10-digit mobile">
+                    </div>
+                    <div class="form-group">
+                        <label>Service Area</label>
+                        <input type="text" name="area" value="{{ worker.area or '' }}" required placeholder="e.g., Koramangala, Sector 15">
+                    </div>
+                    <div class="form-group">
+                        <label>Home Address</label>
+                        <input type="text" name="address" value="{{ worker.address or '' }}" placeholder="Full address (for verification)">
+                    </div>
+                    <div class="form-group">
+                        <label>Experience</label>
+                        <input type="text" name="experience" value="{{ worker.experience or '' }}" placeholder="Experience (for verification)">
+                    </div>
+                    
+                    <!-- ✅ Simple, linter-safe upload preview -->
+                    <div class="form-group">
+                        <label>Profile Photo</label>
+                        <div class="photo-upload" onclick="document.getElementById('photoInput').click()">
+                            <img src="{{ url_for('static', filename='uploads/workers/' + (worker.photo or 'default.jpg')) }}" 
+                                 alt="{{ worker.name }}" 
+                                 class="preview-img"
+                                 id="currentPhoto"
+                                 onerror="this.src='https://ui-avatars.com/api/?name={{ worker.name|urlencode }}&background=0ea5e9&color=fff&size=200'">
+                            <i class="fas fa-cloud-arrow-up" id="uploadIcon"></i>
+                            <p id="uploadText">Click to upload new photo</p>
+                        </div>
+                        <input type="file" id="photoInput" name="photo" accept="image/*" style="display: none;" onchange="previewPhoto(this)">
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Save Changes</button>
+                        <a href="{{ url_for('worker_profile') }}" class="btn btn-outline">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script>
+    // ✅ Photo Preview
+    function previewPhoto(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('currentPhoto');
+                if (preview) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                const icon = document.getElementById('uploadIcon');
+                const text = document.getElementById('uploadText');
+                if (icon) icon.style.display = 'none';
+                if (text) text.textContent = input.files[0].name;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // ✅ Toast Handler
+    window.addEventListener('DOMContentLoaded', function() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('success') === 'updated') showMsg('✅ Profile updated successfully!', 'success');
+        else if (params.get('error') === 'update_failed') showMsg('❌ Failed to update profile. Please try again.', 'danger');
+        if (params.get('success') || params.get('error')) {
+            setTimeout(() => { window.history.replaceState({}, '', window.location.pathname); }, 150);
+        }
+    });
+    
+    function showMsg(text, type) {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+        const el = document.createElement('div');
+        el.className = `toast-msg ${type}`;
+        el.textContent = text;
+        container.appendChild(el);
+        void el.offsetWidth;
+        el.classList.add('visible');
+        setTimeout(() => {
+            el.classList.remove('visible');
+            setTimeout(() => el.remove(), 250);
+        }, 4000);
+    }
+
+    // ✅ Online Toggle API
+    async function toggleOnline() {
+        const btn = document.getElementById('statusToggle');
+        const isOn = btn.classList.contains('online');
+        const newState = !isOn;
+        try {
+            const res = await fetch('/worker/api/toggle_online', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({is_online: newState})
+            });
+            const data = await res.json();
+            if (data.success) {
+                btn.classList.toggle('online', newState);
+                const label = btn.querySelector('span:last-child');
+                if (label) label.textContent = newState ? 'Online' : 'Offline';
+            }
+        } catch (e) { console.error('Toggle failed', e); }
+    }
+</script>
+</body>
+</html>

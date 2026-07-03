@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track Status</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: #f1f5f9;
+}
+
+/* Header */
+.header {
+    background: #0f172a;
+    color: white;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.back-btn {
+    cursor: pointer;
+    color: #cbd5f5;
+}
+
+/* Container */
+.container {
+    padding: 25px;
+}
+
+/* Cards */
+.cards {
+    margin-top: 25px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.card {
+    background: white;
+    width: 280px;
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+/* Status */
+.status {
+    margin-top: 10px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: inline-block;
+}
+
+.pending { background: #fef3c7; color: #92400e; }
+.assigned { background: #dbeafe; color: #1e40af; }
+.completed { background: #dcfce7; color: #166534; }
+
+/* Buttons */
+button {
+    margin-top: 10px;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(to right, #6366f1, #4f46e5);
+    color: white;
+    cursor: pointer;
+}
+
+.section {
+    margin-top: 10px;
+    display: none;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 8px;
+    margin-top: 8px;
+    border-radius: 6px;
+    border: 1px solid #cbd5f5;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+    <div class="back-btn" onclick="goBack()">← Back</div>
+    <h2>Track Status</h2>
+    <div></div>
+</div>
+
+<div class="container">
+
+    <div class="cards">
+
+        <!-- Example Booking -->
+        <div class="card">
+            <h4>Plumbing Service</h4>
+            <p>Date: 22 Mar 2026</p>
+
+            <span class="status completed">Completed</span>
+
+            <!-- Payment -->
+            <div class="section" id="paymentSection">
+                <h4>Payment</h4>
+                <p>Base Price: ₹500</p>
+                <p>Extra Charges: ₹100</p>
+                <p><b>Total: ₹600</b></p>
+
+                <button onclick="payNow()">Pay Now</button>
+            </div>
+
+            <!-- Rating -->
+            <div class="section" id="feedbackSection">
+                <h4>Rate Service</h4>
+                <select id="rating">
+                    <option value="">Select Rating</option>
+                    <option>1 ⭐</option>
+                    <option>2 ⭐⭐</option>
+                    <option>3 ⭐⭐⭐</option>
+                    <option>4 ⭐⭐⭐⭐</option>
+                    <option>5 ⭐⭐⭐⭐⭐</option>
+                </select>
+
+                <textarea placeholder="Write feedback..."></textarea>
+                <button onclick="submitFeedback()">Submit Feedback</button>
+            </div>
+
+            <!-- Complaint -->
+            <div class="section" id="complaintSection">
+                <h4>Raise Complaint</h4>
+                <textarea placeholder="Describe your issue..."></textarea>
+                <button onclick="submitComplaint()">Submit Complaint</button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+function goBack() {
+    window.location.href = "dashboard.html";
+}
+
+/* Show sections only if completed */
+window.onload = function() {
+    let status = document.querySelector(".status").innerText;
+
+    if(status === "Completed") {
+        document.getElementById("paymentSection").style.display = "block";
+        document.getElementById("feedbackSection").style.display = "block";
+        document.getElementById("complaintSection").style.display = "block";
+    }
+}
+
+/* Payment */
+function payNow() {
+    alert("Payment gateway will be integrated later (UPI/Stripe/Razorpay)");
+}
+
+/* Feedback */
+function submitFeedback() {
+    let rating = document.getElementById("rating").value;
+    if(!rating) {
+        alert("Please select rating");
+        return;
+    }
+    alert("Feedback submitted (will be saved in backend)");
+}
+
+/* Complaint */
+function submitComplaint() {
+    alert("Complaint submitted (backend will handle this)");
+}
+
+</script>
+
+</body>
+</html>

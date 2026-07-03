@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Dashboard | HomeServe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #f8fafc; --sidebar: #0f172a; --sidebar-hover: #1e293b;
+            --surface: #ffffff; --border: #e2e8f0; --accent: #6366f1;
+            --text-main: #0f172a; --text-muted: #64748b;
+            --success: #10b981; --success-light: #dcfce7;
+            --warning: #f59e0b; --warning-light: #fef3c7;
+            --danger: #ef4444; --danger-light: #fee2e2;
+            --radius: 14px; --shadow: 0 4px 16px rgba(0,0,0,0.06);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); min-height: 100vh; display: flex; color: var(--text-main); }
+
+        /* === SIDEBAR (Smooth Moving Logic) === */
+        .sidebar { 
+            width: 260px; background: var(--sidebar); color: white; padding: 20px 14px; 
+            display: flex; flex-direction: column; position: fixed; left: 0; top: 0; 
+            height: 100vh; z-index: 1000; overflow-y: auto; 
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            /* Mobile Default: Hidden (Slide Left) */
+            transform: translateX(-100%); 
+        }
+        
+        /* Sidebar Active State */
+        .sidebar.toggled { 
+            transform: translateX(0); 
+            box-shadow: 10px 0 30px rgba(0,0,0,0.15);
+        }
+
+        .sidebar-logo { font-size: 22px; font-weight: 800; margin-bottom: 24px; padding-left: 10px; color: white; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; color: #94a3b8; text-decoration: none; margin-bottom: 6px; transition: var(--transition); font-weight: 500; }
+        .nav-link:hover, .nav-link.active { background: var(--sidebar-hover); color: white; }
+        .nav-link i { width: 20px; text-align: center; }
+        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #1e293b; }
+        
+        .user-mini { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: var(--sidebar-hover); margin-bottom: 20px; }
+        .user-mini-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: white; flex-shrink: 0; overflow: hidden; border: 2px solid rgba(255,255,255,0.15); }
+        .user-mini-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+        .user-mini-info span { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; flex-wrap: wrap; }
+        .user-mini-info small { font-size: 12px; color: #94a3b8; display: block; margin-top: 2px; }
+
+        /* === MAIN & HEADER === */
+        .main { 
+            flex: 1; min-height: 100vh; transition: margin-left 0.3s ease; 
+            /* Mobile Default: Full width */
+            margin-left: 0; 
+        }
+        
+        .topbar { 
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); 
+            padding: 24px; color: white; 
+            display: flex; justify-content: space-between; align-items: center; 
+            flex-wrap: wrap; gap: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 200px; }
+        .menu-toggle { 
+            background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.25); 
+            width: 40px; height: 40px; border-radius: 10px; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; color: white; 
+            font-size: 16px; transition: var(--transition); flex-shrink: 0;
+        }
+        .menu-toggle:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
+        
+        .greeting h1 { font-size: 22px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.3px; }
+        .greeting p { font-size: 13px; color: rgba(255,255,255,0.8); font-weight: 500; }
+        
+        .topbar-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .toggle-pill { 
+            display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); 
+            padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.25); 
+            cursor: pointer; font-weight: 600; font-size: 12px; transition: var(--transition); 
+            color: #e2e8f0; white-space: nowrap;
+        }
+        .toggle-pill.online { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.5); color: #dcfce7; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); transition: var(--transition); }
+        .toggle-pill.online .dot { background: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.3); }
+        .logout-btn { 
+            background: rgba(239,68,68,0.9); color: white; border: none; padding: 8px 14px; 
+            border-radius: 9px; font-weight: 600; cursor: pointer; text-decoration: none; 
+            font-size: 13px; transition: var(--transition); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+        }
+        .logout-btn:hover { background: #dc2626; transform: translateY(-1px); }
+
+        /* === OVERLAY === */
+        .overlay { 
+            position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 900; 
+            opacity: 0; pointer-events: none; transition: 0.3s; backdrop-filter: blur(4px); 
+        }
+        .overlay.toggled { opacity: 1; pointer-events: auto; }
+
+        /* === CONTENT & CARDS === */
+        .content { padding: 24px; max-width: 1150px; margin: 0 auto; }
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--surface); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); border: 1px solid var(--border); display: flex; align-items: center; gap: 12px; transition: var(--transition); }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,0.1); }
+        .stat-icon { width: 42px; height: 42px; background: #e0e7ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 18px; }
+        .stat-value { font-size: 22px; font-weight: 800; line-height: 1.1; }
+        .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+        .section { background: var(--surface); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 20px; }
+        .section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .section-title i { color: var(--accent); }
+        .badge-count { background: var(--warning-light); color: #92400e; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; margin-left: auto; }
+
+        .job-card { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; background: #fafbfc; transition: var(--transition); position: relative; }
+        .job-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--border); border-radius: 4px 0 0 4px; transition: 0.3s; }
+        .job-card:hover { border-color: var(--accent); background: white; transform: translateY(-2px); box-shadow: var(--shadow); }
+        .job-card.active::before { background: var(--accent); }
+        .job-card.completed::before { background: var(--success); }
+        .job-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+        .job-title { font-size: 16px; font-weight: 700; }
+        .status-badge { padding: 4px 9px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .status-assigned { background: #dbeafe; color: #1e40af; }
+        .status-arrived { background: #e0e7ff; color: #4f46e5; }
+        .status-in_progress { background: #f3e8ff; color: #7e22ce; }
+        .status-completed { background: var(--success-light); color: #047857; }
+        .job-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 12px; font-size: 13px; color: var(--text-muted); }
+        .job-meta div { display: flex; align-items: center; gap: 6px; }
+        .job-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { padding: 9px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; text-decoration: none; transition: var(--transition); display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: var(--accent); color: white; } .btn-primary:hover { background: #4f46e5; transform: translateY(-1px); }
+        .btn-success { background: var(--success); color: white; } .btn-success:hover { background: #059669; }
+        .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text-muted); } .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-danger { background: var(--danger-light); color: #b91c1c; } .btn-danger:hover { background: var(--danger); color: white; }
+
+        .empty-state { text-align: center; padding: 36px 20px; background: var(--bg); border-radius: 12px; border: 2px dashed var(--border); }
+        .empty-icon { font-size: 32px; color: #cbd5e1; margin-bottom: 12px; }
+        .empty-state h3 { font-size: 15px; margin-bottom: 4px; }
+        .empty-state p { color: var(--text-muted); font-size: 13px; }
+
+        /* === PENDING SCREEN === */
+        .pending-wrapper { min-height: 100vh;display:flex; align-items:center; justify-content:center;margin:auto; padding: 20px; background: var(--bg); }
+        .pending-card { background: var(--surface);align-content:center; border-radius: 16px; box-shadow: var(--shadow); max-width: 600px; width: 100%; margin:auto; overflow: hidden; border-top: 5px solid var(--warning); }
+        .pending-header { background: var(--warning-light); padding: 30px; text-align: center; }
+        .pending-icon { width: 64px; height: 64px; background: var(--surface); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 24px; color: var(--warning); box-shadow: 0 6px 14px rgba(245,158,11,0.2); }
+        .pending-header h2 { font-size: 21px; font-weight: 800; margin-bottom: 6px; }
+        .pending-header p { color: #78350f; font-size: 14px; }
+        .pending-body { padding: 24px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+        .info-box { background: var(--bg); padding: 12px; border-radius: 10px; }
+        .info-box strong { display: block; font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+        .info-box span { font-weight: 600; font-size: 13px; }
+        .docs-box { background: var(--warning-light); border-left: 4px solid var(--warning); padding: 12px; border-radius: 0 8px 8px 0; margin-bottom: 16px; }
+        .logout-pending { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 13px; background: var(--sidebar); color: white; border-radius: 10px; text-decoration: none; font-weight: 600; transition: var(--transition); }
+        requests-section {
+    margin-top: 30px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.section-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.section-header h2 i {
+    color: #3b82f6;
+    margin-right: 10px;
+}
+
+.request-count {
+     background: #3b82f6;
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.request-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.request-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+}
+
+.request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.customer-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.customer-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    font-weight: 700;
+}
+.customer-info h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 4px 0;
+}
+
+.customer-phone {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.customer-phone i {
+    margin-right: 4px;
+}
+
+.price-badge {
+    background: #10b981;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.request-details {
+     margin-bottom: 20px;
+}
+
+.detail-row {
+    margin-bottom: 16px;
+}
+
+.detail-row.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.detail-item i {
+    color: #3b82f6;
+    font-size: 18px;
+    margin-top: 2px;
+    width: 20px;
+}
+.detail-item div {
+    flex: 1;
+}
+
+.detail-item strong {
+    display: block;
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.detail-item span {
+    font-size: 15px;
+    color: #1f2937;
+    font-weight: 500;
+}
+
+.request-actions {
+    display: flex;
+    gap: 12px;
+    padding-top: 16px;
+     border-top: 1px solid #f3f4f6;
+}
+
+.btn {
+    flex: 1;
+    padding: 14px 24px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-accept {
+    background: #10b981;
+    color: white;
+}
+.btn-accept:hover {
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-decline {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.btn-decline:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.no-requests {
+    text-align: center;
+    padding: 60px 20px;
+    color: #9ca3af;
+}
+
+.no-requests i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    }
+
+.no-requests p {
+    font-size: 16px;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .request-card {
+        padding: 20px;
+    }
+    
+    .detail-row.two-col {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .request-actions {
+        flex-direction: column;
+    }
+}
+
+
+        /* === DESKTOP RESPONSIVE LOGIC === */
+        @media (min-width: 1025px) {
+            /* Sidebar visible by default */
+            .sidebar { transform: translateX(0); box-shadow: none; }
+            /* When toggled, sidebar hides */
+            .sidebar.toggled { transform: translateX(-100%); box-shadow: 10px 0 30px rgba(0,0,0,0.15); }
+            
+            /* Main content pushes sidebar space */
+            .main { margin-left: 260px; }
+            /* When toggled, main takes full width */
+            .main.toggled { margin-left: 0; }
+            
+            /* Overlay hidden on desktop */
+            .overlay { display: none; }
+        }
+
+        @media (max-width: 600px) {
+            .stats-row { grid-template-columns: 1fr; }
+            .info-grid { grid-template-columns: 1fr; }
+            .job-meta { grid-template-columns: 1fr; }
+            .topbar { flex-direction: column; align-items: flex-start; gap: 14px; padding: 20px; }
+            .topbar-left, .topbar-right { width: 100%; }
+            .topbar-right { justify-content: space-between; }
+        }
+    </style>
+</head>
+<body>
+{% if show_pending %}
+
+<div class="pending-wrapper">
+    <div class="pending-card">
+        <div class="pending-header">
+            <div class="pending-icon"><i class="fas fa-file-signature"></i></div>
+            <h2>Account Verification Pending</h2>
+            <p>Complete your in-office verification to activate your account & start receiving jobs</p>
+        </div>
+        <div class="pending-body">
+            <div class="info-grid">
+                <div class="info-box"><strong>Office Address</strong><span>{{ approval_info.office_address }}</span></div>
+                <div class="info-box"><strong>Hours</strong><span>{{ approval_info.verification_hours }}</span></div>
+                <div class="info-box"><strong>Contact</strong><span>{{ approval_info.contact_phone }}</span></div>
+                <div class="info-box"><strong>Email</strong><span>{{ approval_info.contact_email }}</span></div>
+            </div>
+            <div class="docs-box"><strong><i class="fas fa-folder-open"></i> Required Documents</strong><p>{{ approval_info.required_docs }}</p></div>
+            <p style="font-size:13px;color:#166534;background:#f0fdf4;padding:10px;border-radius:8px;margin-bottom:18px"><i class="fas fa-info-circle"></i> {{ approval_info.note }}</p>
+            <a href="{{ url_for('worker_logout') }}" class="logout-pending"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
+</div>
+
+{% else %}
+
+<div class="overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+    <a href="{{ url_for('worker_dashboard') }}" class="sidebar-logo"><i class="fas fa-helmet-safety"></i> HomeServe</a>
+    
+    <div class="user-mini">
+        <div class="user-mini-avatar">
+            {% if worker.photo and worker.photo != 'default.jpg' %}
+                <img src="{{ url_for('static', filename='uploads/workers/' + worker.photo) }}" alt="avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;">{{ worker.name[:1]|upper }}</span>
+            {% else %}
+                <span style="width:100%;height:100%;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;">{{ worker.name[:1]|upper }}</span>
+            {% endif %}
+        </div>
+        <div class="user-mini-info">
+            <span>
+                {{ worker.name }}
+                {% if worker.status and 'approved' in worker.status|lower %}
+                <span style="display:inline-flex; align-items:center; gap:4px; background:rgba(16,185,129,0.15); color:#10b981; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700;">
+                    <i class="fas fa-check-circle"></i> Verified
+                </span>
+                {% endif %}
+            </span>
+            <small>{{ worker.service_name or 'Professional' }}</small>
+        </div>
+    </div>
+
+    <nav style="flex:1; display:flex; flex-direction:column; gap:6px;">
+        <a href="{{ url_for('worker_dashboard') }}" class="nav-link active"><i class="fas fa-grid-2"></i> Dashboard</a>
+        <a href="{{ url_for('worker_schedule') }}" class="nav-link"><i class="fas fa-calendar-days"></i> Schedule & Jobs</a>
+        <a href="{{ url_for('worker_history') }}" class="nav-link"><i class="fas fa-clock-rotate-left"></i> Booking History</a>
+        <a href="{{ url_for('worker_profile') }}" class="nav-link"><i class="fas fa-user-gear"></i> Profile Settings</a>
+    </nav>
+    
+    <div class="sidebar-footer">
+        <a href="{{ url_for('worker_logout') }}" class="nav-link" style="color:#f87171;"><i class="fas fa-right-from-bracket"></i> Logout</a>
+    </div>
+</aside>
+
+<main class="main" id="mainContent">
+    <header class="topbar">
+        <div class="topbar-left">
+            <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle Sidebar"><i class="fas fa-bars"></i></button>
+            <div class="greeting">
+                <h1 id="greetText">Welcome back, {{ worker.name.split()[0] }}</h1>
+                <p>Track your active jobs, manage your daily schedule, and grow your professional earnings.</p>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <button class="toggle-pill {% if worker.is_online %}online{% endif %}" id="statusToggle" onclick="toggleOnline()">
+                <span class="dot"></span>
+                <span id="statusText">{% if worker.is_online %}Online{% else %}Offline{% endif %}</span>
+            </button>
+            <a href="{{ url_for('worker_logout') }}" class="logout-btn"><i class="fas fa-power-off"></i> Logout</a>
+        </div>
+    </header>
+
+    <div class="content">
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-check-double"></i></div>
+                <div><div class="stat-value">{{ today_stats.completed_today or 0 }}</div><div class="stat-label">Completed Today</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-indian-rupee-sign"></i></div>
+                <div><div class="stat-value">₹{{ today_stats.today_earnings or 0 }}</div><div class="stat-label">Today's Earnings</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-star"></i></div>
+                <div><div class="stat-value">{{ overall_stats.avg_rating or 'N/A' }}</div><div class="stat-label">Avg Rating</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                <div><div class="stat-value">{{ overall_stats.total_completed or 0 }}</div><div class="stat-label">Lifetime Jobs</div></div>
+            </div>
+        </div>
+
+        {% if active_job %}
+        <section class="section">
+            <div class="section-title"><i class="fas fa-briefcase"></i> Active Job</div>
+            <div class="job-card active">
+                <div class="job-top">
+                    <div class="job-title">{{ active_job.service_name }}</div>
+                    {% if active_job.status == 'Assigned' %}<span class="status-badge status-assigned">Assigned</span>
+                    {% elif active_job.status == 'Arrived' %}<span class="status-badge status-arrived">Arrived</span>
+                    {% elif active_job.status == 'In Progress' %}<span class="status-badge status-in_progress">In Progress</span>{% endif %}
+                </div>
+                <div class="job-meta">
+                    <div><i class="fas fa-user"></i> {{ active_job.customer_name }}</div>
+                    <div><i class="fas fa-location-dot"></i> {{ active_job.area or 'Local' }}</div>
+                    <div><i class="fas fa-calendar"></i> {{ active_job.booking_date }}</div>
+                    <div><i class="fas fa-clock"></i> {{ active_job.booking_time }}</div>
+                </div>
+                <div class="job-actions">
+                    <a href="{{ url_for('worker_schedule') }}" class="btn btn-primary"><i class="fas fa-list-check"></i> Manage Job</a>
+                   
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <section class="section">
+            <div class="section-title"><i class="fas fa-bell"></i> New Requests {% if broadcasts %}<span class="badge-count">{{ broadcasts|length }}</span>{% endif %}</div>
+            {% if broadcasts %}
+                {% for job in broadcasts %}
+                <div class="job-card">
+                    <div class="job-top">
+                        <div class="job-title">{{ job.service_name }}</div>
+                        <span style="background:var(--warning-light);color:#92400e;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700">New</span>
+                    </div>
+                    <div class="job-meta">
+                        <div><i class="fas fa-user"></i> {{ job.customer_name }}</div>
+                        <div><i class="fas fa-location-dot"></i> {{ job.area or 'Local' }}</div>
+                        <div><i class="fas fa-calendar"></i> {{ job.booking_date }}</div>
+                        <div><i class="fas fa-clock"></i> {{ job.booking_time }}</div>
+                    </div>
+                    <div style="font-weight:700;color:var(--accent);margin:12px 0;font-size:18px;">₹{{ job.base_price }}</div>
+                    <div class="job-actions">
+                        <a href="{{ url_for('worker_respond', booking_id=job.id, action='accept') }}" class="btn btn-success"><i class="fas fa-check"></i> Accept</a>
+                        <a href="{{ url_for('worker_respond', booking_id=job.id, action='reject') }}" class="btn btn-danger"><i class="fas fa-xmark"></i> Decline</a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="fas fa-mug-hot"></i></div>
+                    <h3>No new requests right now</h3>
+                    <p>Stay online to receive instant notifications when customers book your service.</p>
+                </div>
+            {% endif %}
+        </section>
+
+        {% if recent_jobs %}
+        <section class="section">
+            <div class="section-title"><i class="fas fa-history"></i> Recent Completed</div>
+            {% for job in recent_jobs %}
+            <div class="job-card completed">
+                <div class="job-top">
+                    <div class="job-title">{{ job.service_name }}</div>
+                    <span class="status-badge status-completed">Completed</span>
+                </div>
+                <div class="job-meta">
+                    <div><i class="fas fa-user"></i> {{ job.customer_name }}</div>
+                    <div><i class="fas fa-calendar"></i> {{ job.booking_date }}</div>
+                </div>
+                <div style="text-align:right;font-weight:700;color:var(--success);margin-top:10px;"><i class="fas fa-check-circle"></i> Finished</div>
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+    </div>
+</main>
+{% endif %}
+
+<script>
+    // Sidebar Toggle Logic
+    function toggleSidebar() { 
+        document.getElementById('sidebar').classList.toggle('toggled'); 
+        document.getElementById('mainContent').classList.toggle('toggled'); 
+        document.getElementById('sidebarOverlay').classList.toggle('toggled'); 
+    }
+
+    // Dynamic Greeting
+    (function() {
+        var h = new Date().getHours();
+        var el = document.getElementById('greetText');
+        if (el) {
+            var name = '{{ worker.name.split()[0] }}';
+            var greeting = (h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening');
+            el.textContent = greeting + ', ' + name;
+        }
+    })();
+
+    // Online Toggle
+    async function toggleOnline() {
+        var btn = document.getElementById('statusToggle');
+        var txt = document.getElementById('statusText');
+        var isOn = btn.classList.contains('online');
+        try {
+            var res = await fetch('/worker/api/toggle_online', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ is_online: !isOn }) 
+            });
+            var data = await res.json();
+            if (data.success) { 
+                btn.classList.toggle('online', data.is_online); 
+                txt.textContent = data.is_online ? 'Online' : 'Offline'; 
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    // Close on Escape
+    document.addEventListener('keydown', function(e) {
+        if(e.key==='Escape'){ 
+            document.getElementById('sidebar').classList.remove('toggled'); 
+            document.getElementById('mainContent').classList.remove('toggled'); 
+            document.getElementById('sidebarOverlay').classList.remove('toggled'); 
+        }
+    });
+</script>
+</body>
+</html>

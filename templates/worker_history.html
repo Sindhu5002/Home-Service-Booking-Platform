@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking History | HomeServe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #f1f5f9; --sidebar: #0f172a; --sidebar-hover: #1e293b;
+            --surface: #ffffff; --border: #e2e8f0; --accent: #6366f1;
+            --text-main: #0f172a; --text-muted: #64748b;
+            --success: #10b981; --warning: #f59e0b; --star: #fbbf24; --danger: #ef4444;
+            --radius: 16px; --shadow: 0 4px 16px rgba(0,0,0,0.05);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); min-height: 100vh; display: flex; color: var(--text-main); }
+        
+       
+        .user-mini { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; background: var(--sidebar-hover); }
+        .user-mini-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: white; }
+        .user-mini-info span { display: block; font-size: 13px; font-weight: 600; }
+        .user-mini-info small { font-size: 11px; color: #94a3b8; }
+
+        .main-content { margin-left: 260px; flex: 1; padding: 28px; width: calc(100% - 260px); }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .page-header h1 { font-size: 24px; font-weight: 800; }
+        .back-link { text-decoration:none; color:var(--gray); font-weight:600; font-size:14px; padding:8px 12px; border-radius:8px; transition:0.2s; display:inline-flex; align-items:center; gap:6px; }
+        .back-link:hover { background:var(--white); color:var(--accent); }
+        .page-stats { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+        .stat-pill { background: var(--surface); padding: 10px 16px; border-radius: 12px; border: 1px solid var(--border); box-shadow: var(--shadow); display: flex; align-items: center; gap: 10px; }
+        .stat-pill i { color: var(--accent); font-size: 18px; }
+        .stat-pill .val { font-weight: 800; font-size: 16px; }
+        .stat-pill .lbl { font-size: 12px; color: var(--text-muted); }
+
+        .history-list { display: flex; flex-direction: column; gap: 16px; }
+        .h-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); transition: 0.2s; }
+        .h-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        .h-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+        .h-service { font-size: 17px; font-weight: 700; color: var(--accent); }
+        .h-date { font-size: 13px; color: var(--text-muted); background: #f8fafc; padding: 5px 12px; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        
+        .h-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 18px; }
+        .h-item label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; display: block; }
+        .h-item span { font-size: 14px; font-weight: 600; color: var(--text-main); }
+        .earnings { background: #ecfdf5; color: #047857; padding: 6px 12px; border-radius: 8px; font-weight: 700; display: inline-block; }
+        
+        .feedback-section { padding-top: 16px; border-top: 1px dashed var(--border); margin-top: 12px; }
+        .feedback-title { font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .stars { display: flex; gap: 3px; color: var(--star); font-size: 16px; margin-bottom: 8px; }
+        .stars .empty { color: #cbd5e1; }
+        .review { font-size: 14px; color: var(--text-main); line-height: 1.5; font-style: italic; }
+        .no-feedback { color: var(--text-muted); font-size: 13px; font-style: italic; }
+        
+        .complaints-section { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--border); }
+        .complaint-card { background: #fef2f2; border-left: 4px solid var(--danger); padding: 12px 14px; border-radius: 0 8px 8px 0; margin-bottom: 10px; }
+        .complaint-card:last-child { margin-bottom: 0; }
+        .complaint-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .complaint-category { font-size: 12px; font-weight: 700; color: var(--danger); text-transform: uppercase; }
+        .complaint-status { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 700; }
+        .status-open { background: #fee2e2; color: #b91c1c; }
+        .status-resolved { background: #dcfce7; color: #15803d; }
+        .status-closed { background: #e2e8f0; color: #475569; }
+        .complaint-desc { font-size: 13px; color: var(--text-main); margin-bottom: 6px; }
+        .complaint-date { font-size: 11px; color: var(--text-muted); }
+        
+        .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); }
+        .empty-state i { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
+        
+        .menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 100; background: var(--surface); border: 1px solid var(--border); padding: 8px; border-radius: 8px; cursor: pointer; box-shadow: var(--shadow); }
+        @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); transition: 0.3s; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; width: 100%; padding: 16px; }
+            .menu-toggle { display: block; }
+            .h-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+    
+   
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Booking History</h1>
+            <a href="{{ url_for('worker_dashboard') }}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        </div>
+        
+        {% if history %}
+        <div class="page-stats">
+            <div class="stat-pill"><i class="fas fa-briefcase"></i><div><div class="val">{{ total_jobs }}</div><div class="lbl">Completed Jobs</div></div></div>
+            <div class="stat-pill"><i class="fas fa-indian-rupee-sign"></i><div><div class="val">₹{{ total_earned | round(2) }}</div><div class="lbl">Total Earnings</div></div></div>
+            <div class="stat-pill"><i class="fas fa-star"></i><div><div class="val">{{ avg_rating | round(1) if avg_rating > 0 else 'N/A' }}</div><div class="lbl">Avg Rating</div></div></div>
+        </div>
+ 
+        <div class="history-list">
+            {% for h in history %}
+            <div class="h-card">
+                <div class="h-header">
+                    <div class="h-service">{{ h.service_name }}</div>
+                    <div class="h-date"><i class="fas fa-calendar"></i> {{ h.booking_date }} • {{ h.booking_time }}</div>
+                </div>
+                
+                <div class="h-grid">
+                    <div class="h-item"><label>Customer</label><span>{{ h.customer_name }}</span></div>
+                    <div class="h-item"><label>Location</label><span>{{ h.area }}, {{ h.address }}</span></div>
+                    <div class="h-item"><label>Earnings</label><span class="earnings">₹{{ h.base_price + h.extra_charges }}</span></div>
+                </div>
+                
+                <!-- ✅ FEEDBACK SECTION -->
+                <div class="feedback-section">
+                    <div class="feedback-title"><i class="fas fa-comment-alt"></i> Customer Feedback</div>
+                    {% if h.rating %}
+                    <div class="stars">
+                        {% for i in range(1, 6) %}<i class="fas fa-star {{ 'empty' if i > h.rating else '' }}"></i>{% endfor %}
+                    </div>
+                    <div class="review">{{ h.customer_review or 'No written review' }}</div>
+                    {% else %}
+                    <div class="no-feedback"><i class="fas fa-comment-slash"></i> Customer hasn't rated yet</div>
+                    {% endif %}
+                </div>
+                
+                <!-- ✅ COMPLAINTS SECTION (NEW) -->
+                {% if h.complaints %}
+                <div class="complaints-section">
+                    <div class="feedback-title" style="color:var(--danger)"><i class="fas fa-exclamation-triangle"></i> Complaints ({{ h.complaints|length }})</div>
+                    {% for c in h.complaints %}
+                    <div class="complaint-card">
+                        <div class="complaint-header">
+                            <span class="complaint-category">{{ c.category }}</span>
+                            <span class="complaint-status status-{{ c.status|lower }}">{{ c.status }}</span>
+                        </div>
+                        <div class="complaint-desc">{{ c.description }}</div>
+                        <div class="complaint-date"><i class="fas fa-clock"></i> Filed: {{ c.date.strftime('%b %d, %Y') if c.date else 'Unknown' }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-clipboard-check"></i>
+            <h3>No completed jobs yet</h3>
+            <p>Your past bookings, customer ratings, and feedback will appear here once jobs are completed.</p>
+        </div>
+        {% endif %}
+    </main>
+</body>
+</html>

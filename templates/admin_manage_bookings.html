@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Bookings | HomeServe Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #f8fafc; --surface: #ffffff; --border: #e2e8f0; --accent: #6366f1; --text-main: #0f172a; --text-muted: #64748b; --success: #10b981; --success-light: #ecfdf5; --warning: #f59e0b; --warning-light: #fffbeb; --danger: #ef4444; --danger-light: #fee2e2; --info: #3b82f6; --info-light: #dbeafe; --shadow: 0 4px 16px rgba(0,0,0,0.05); --radius: 14px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); min-height: 100vh; padding: 24px; color: var(--text-main); }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .top-bar h1 { font-size: 24px; font-weight: 800; color: var(--accent); }
+        .back-btn { padding: 10px 16px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text-muted); text-decoration: none; font-weight: 600; transition: 0.2s; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .table-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th { background: #f8fafc; padding: 14px 16px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+        td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+        tr:hover td { background: #fafbfc; }
+        tr:last-child td { border-bottom: none; }
+        .user-row { display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #8b5cf6); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+        .meta-main { font-weight: 600; color: var(--text-main); }
+        .meta-sub { font-size: 12px; color: var(--text-muted); }
+        .badge { padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
+        .badge-pending { background: var(--warning-light); color: #92400e; }
+        .badge-assigned { background: var(--info-light); color: #1e40af; }
+        .badge-in_progress { background: #f3e8ff; color: #7e22ce; }
+        .badge-completed { background: var(--success-light); color: #047857; }
+        .badge-cancelled { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
+        .badge-paid { background: var(--success-light); color: #047857; }
+        .badge-unpaid { background: #fef2f2; color: #b91c1c; }
+        .badge-complaint { background: var(--danger-light); color: #b91c1c; border: 1px solid #fecaca; cursor: pointer; }
+        .detail-btn { background: transparent; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; cursor: pointer; transition: 0.2s; color: var(--text-muted); }
+        .detail-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--info-light); }
+        .empty { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+        .empty i { font-size: 36px; margin-bottom: 12px; opacity: 0.3; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal.active { display: flex; }
+        .modal-card { background: var(--surface); border-radius: 16px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
+        .modal-header { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 18px; font-weight: 700; }
+        .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); }
+        .modal-body { padding: 22px; }
+        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border); }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+        .detail-value { font-size: 14px; font-weight: 600; color: var(--text-main); text-align: right; }
+        .complaint-item { background: var(--danger-light); border-left: 4px solid var(--danger); padding: 12px; border-radius: 0 8px 8px 0; margin-bottom: 10px; }
+        .complaint-item:last-child { margin-bottom: 0; }
+        .complaint-title { font-size: 13px; font-weight: 700; color: var(--danger); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .complaint-desc { font-size: 13px; color: var(--text-main); margin-bottom: 6px; }
+        .complaint-meta { font-size: 11px; color: var(--text-muted); display: flex; gap: 12px; }
+        @media (max-width: 900px) { .top-bar { flex-direction: column; align-items: flex-start; } th, td { padding: 10px 8px; font-size: 12px; } table { min-width: 750px; } }
+    </style>
+</head>
+<body>
+    <div id="toast" style="position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:340px;pointer-events:none;"></div>
+
+    <div class="top-bar">
+        <h1><i class="fas fa-calendar-check"></i> Booking Management</h1>
+        <a href="{{ url_for('admin_dashboard') }}" class="back-btn"><i class="fas fa-arrow-left"></i> Dashboard</a>
+    </div>
+
+    <div class="table-card">
+        {% if bookings %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Customer</th><th>Service</th><th>Worker</th><th>Date & Time</th><th>Status</th><th>Payment</th><th>Details</th><th>Feedback</th><th>Complaints</th></tr>
+                </thead>
+                <tbody>
+                    {% for b in bookings %}
+                    <tr>
+                        <td><span style="opacity:0.6">#</span>{{ b.id }}</td>
+                        <td class="user-row">
+                            <div class="avatar">{{ b.customer_name[:1]|upper }}</div>
+                            <div><div class="meta-main">{{ b.customer_name }}</div><div class="meta-sub">{{ b.customer_phone or 'N/A' }}</div></div>
+                        </td>
+                        <td>{{ b.service_name or 'N/A' }}</td>
+                        <td>{{ b.worker_name or 'Unassigned' }}</td>
+                        <td><div class="meta-main">{{ b.booking_date }}</div><div class="meta-sub">{{ b.booking_time }}</div></td>
+                        <td><span class="badge badge-{{ b.status|lower|replace(' ','_') }}">{{ b.status }}</span></td>
+                        
+                        <!-- ✅ FIXED: Properly handles 'Cancelled' payment status -->
+                        <td>
+                            {% if b.payment_status == 'Paid' %}
+                                <span class="badge badge-paid">Paid</span>
+                            {% elif b.status == 'Cancelled' %}
+                                <span class="badge badge-cancelled">Cancelled</span>
+                            {% else %}
+                                <span class="badge badge-unpaid">Pending</span>
+                            {% endif %}
+                        </td>
+                        
+                        <td>
+                            <button class="detail-btn" data-id="{{ b.id }}" data-base="{{ b.base_price }}" data-extra="{{ b.extra_charges or 0 }}" data-note="{{ b.extra_charges_note or 'No note' }}" data-complaints='{{ b.complaints | tojson | safe }}'>
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                        </td>
+                        <td>{% if b.feedback_rating %}<span style="color:var(--warning)"><i class="fas fa-star"></i> {{ b.feedback_rating }}/5</span>{% else %}<span style="color:var(--text-muted)">—</span>{% endif %}</td>
+                        <td>{% if b.complaint_count and b.complaint_count > 0 %}<span class="badge badge-complaint" data-complaints='{{ b.complaints | tojson | safe }}'><i class="fas fa-exclamation-triangle"></i> {{ b.complaint_count }}</span>{% else %}<span style="color:var(--text-muted)">—</span>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty"><i class="fas fa-clipboard-list"></i><h3>No bookings found</h3><p>All confirmed bookings will appear here.</p></div>
+        {% endif %}
+    </div>
+
+    <div class="modal" id="detailModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">Booking #<span id="modalBookingId"></span> Details</div>
+                <button class="modal-close" id="modalCloseBtn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-row"><span class="detail-label">Base Price</span><span class="detail-value">₹<span id="modalBasePrice"></span></span></div>
+                <div class="detail-row"><span class="detail-label">Extra Charges</span><span class="detail-value">₹<span id="modalExtraCharges"></span></span></div>
+                <div class="detail-row"><span class="detail-label">Note</span><span class="detail-value" id="modalNote" style="text-align:left;font-style:italic"></span></div>
+                <div id="complaintsSection" style="margin-top:16px;padding-top:16px;border-top:1px dashed var(--border);display:none">
+                    <div style="font-weight:700;color:var(--danger);margin-bottom:10px;display:flex;align-items:center;gap:6px"><i class="fas fa-exclamation-triangle"></i> Complaints</div>
+                    <div id="complaintsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var buttons = document.querySelectorAll('.detail-btn, .badge-complaint');
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].addEventListener('click', function(e) {
+                e.preventDefault();
+                var id = this.getAttribute('data-id') || 'Complaint';
+                var base = this.getAttribute('data-base') || '0';
+                var extra = this.getAttribute('data-extra') || '0';
+                var note = this.getAttribute('data-note') || 'No note';
+                var compJson = this.getAttribute('data-complaints') || '[]';
+                openModal(id, base, extra, note, compJson);
+            });
+        }
+        document.getElementById('modalCloseBtn').addEventListener('click', function() { closeModal(); });
+        document.getElementById('detailModal').addEventListener('click', function(e) { if (e.target === this) { closeModal(); } });
+    });
+
+    function openModal(id, base, extra, note, compJson) {
+        document.getElementById('modalBookingId').textContent = id;
+        document.getElementById('modalBasePrice').textContent = base;
+        document.getElementById('modalExtraCharges').textContent = extra;
+        document.getElementById('modalNote').textContent = note;
+
+        var compSection = document.getElementById('complaintsSection');
+        var compList = document.getElementById('complaintsList');
+        compList.innerHTML = '';
+
+        var complaints = [];
+        try { complaints = JSON.parse(compJson); } catch(err) {}
+
+        if (complaints.length > 0) {
+            compSection.style.display = 'block';
+            for (var k = 0; k < complaints.length; k++) {
+                var c = complaints[k];
+                var div = document.createElement('div');
+                div.className = 'complaint-item';
+                div.innerHTML = '<div class="complaint-title"><i class="fas fa-tag"></i> ' + c.category + '</div><div class="complaint-desc">' + c.description + '</div><div class="complaint-meta"><span>Status: ' + c.status + '</span><span>Date: ' + (c.date || '') + '</span></div>';
+                compList.appendChild(div);
+            }
+        } else {
+            compSection.style.display = 'none';
+        }
+        document.getElementById('detailModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('detailModal').classList.remove('active');
+    }
+
+    function showToast(message, type) {
+        if (!type) type = 'success';
+        var container = document.getElementById('toast');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast';
+            container.style.position = 'fixed';
+            container.style.top = '20px';
+            container.style.right = '20px';
+            container.style.zIndex = '9999';
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.gap = '10px';
+            container.style.maxWidth = '340px';
+            container.style.pointerEvents = 'none';
+            document.body.appendChild(container);
+        }
+        var bg = '#dcfce7', border = '#22c55e', txt = '#166534';
+        if (type === 'error') { bg = '#fee2e2'; border = '#ef4444'; txt = '#b91c1c'; }
+        var toast = document.createElement('div');
+        toast.style.backgroundColor = bg;
+        toast.style.color = txt;
+        toast.style.borderLeft = '4px solid ' + border;
+        toast.style.padding = '12px 16px';
+        toast.style.marginBottom = '10px';
+        toast.style.borderRadius = '10px';
+        toast.style.fontFamily = 'Plus Jakarta Sans, sans-serif';
+        toast.style.fontSize = '13px';
+        toast.style.fontWeight = '600';
+        toast.style.boxShadow = '0 6px 20px rgba(0,0,0,0.15)';
+        toast.style.pointerEvents = 'auto';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(20px)';
+        toast.style.transition = 'all 0.3s ease';
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(function() { toast.style.opacity = '1'; toast.style.transform = 'translateX(0)'; }, 10);
+        setTimeout(function() {
+            toast.style.opacity = '0'; toast.style.transform = 'translateX(20px)';
+            setTimeout(function() { if (container.contains(toast)) { container.removeChild(toast); } }, 300);
+        }, 3000);
+    }
+    </script>
+</body>
+</html>

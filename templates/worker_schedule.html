@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Schedule | HomeServe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary:#0ea5e9; --success:#10b981; --warning:#f59e0b; --dark:#0f172a; --gray:#64748b; --light:#f8fafc; --white:#fff; --border:#e2e8f0; --shadow:0 10px 25px -5px rgba(0,0,0,0.1); --radius:16px; }
+        *{margin:0;padding:0;box-sizing:border-box} body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--light);min-height:100vh;padding:20px;color:var(--dark)}
+        .container{max-width:800px;margin:0 auto} .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+        .page-header h1{font-size:22px;font-weight:800} .back-link{text-decoration:none;color:var(--gray);font-weight:600;font-size:14px;padding:8px 12px;border-radius:8px;transition:0.2s}
+        .back-link:hover{background:var(--white);color:var(--primary)}
+        .job-card{background:var(--white);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow);border:1px solid var(--border)}
+        .job-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+        .job-title{font-size:17px;font-weight:700} .status-badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase}
+        .status-assigned{background:#dbeafe;color:#1e40af} .status-arrived{background:#e0f2fe;color:#0284c7}
+        .status-in_progress{background:#f3e8ff;color:#7e22ce} .status-completed{background:#dcfce7;color:#15803d}
+        .job-details{margin-bottom:16px} .job-details p{font-size:14px;margin-bottom:6px;display:flex;align-items:center;gap:8px;color:var(--gray)}
+        .job-details p i{width:16px;text-align:center;color:var(--primary)} .job-price{font-size:16px;font-weight:800;color:var(--primary-dark);margin-top:8px}
+        .job-actions{display:flex;gap:10px;flex-wrap:wrap}
+        .btn{padding:10px 16px;border-radius:10px;border:none;font-weight:600;font-size:13px;cursor:pointer;transition:0.2s;display:flex;align-items:center;gap:6px;font-family:inherit}
+        .btn-primary{background:var(--primary);color:white} .btn-primary:hover{background:#0284c7} .btn-success{background:var(--success);color:white} .btn-success:hover{background:#059669}
+        .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--gray)} .btn:disabled{opacity:0.6;cursor:not-allowed}
+        .empty-state{text-align:center;padding:40px;background:var(--white);border-radius:var(--radius);border:2px dashed var(--border)}
+        /* Modal */
+        .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;padding:20px}
+        .modal.active{display:flex} .modal-box{background:var(--white);border-radius:14px;max-width:400px;width:100%;padding:24px}
+        .modal-title{font-size:18px;font-weight:700;margin-bottom:16px} .form-group{margin-bottom:14px}
+        .form-label{display:block;font-size:13px;font-weight:600;color:var(--gray);margin-bottom:6px}
+        .form-input{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit}
+        .modal-actions{display:flex;gap:10px;margin-top:16px} .modal-actions .btn{flex:1;justify-content:center}
+        @media(max-width:600px){.job-actions{flex-direction:column}.btn{width:100%;justify-content:center}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="page-header">
+        <a href="{{ url_for('worker_dashboard') }}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        <h1><i class="fas fa-calendar-check" style="color:var(--primary);margin-right:8px"></i> My Schedule</h1>
+    </div>
+
+    {% if jobs %}
+        {% for job in jobs %}
+        <div class="job-card">
+           <div class="job-header">
+    <span class="job-title">{{ job.service_name }}</span>
+    <div>
+        {% if job.status == 'Assigned' %}<span class="status-badge status-assigned">Assigned</span>
+        {% elif job.status == 'Arrived' %}<span class="status-badge status-arrived">Arrived</span>
+        {% elif job.status == 'In Progress' %}<span class="status-badge status-in_progress">In Progress</span>
+        {% else %}<span class="status-badge status-completed">Completed</span>{% endif %}
+        
+        <!-- ✅ FIXED: Explicit payment status check -->
+        {% set ps = job.payment_status or 'Pending' %}
+        {% if ps == 'Paid' %}
+        <span class="status-badge" style="background:#dcfce7;color:#15803d;margin-left:6px"><i class="fas fa-wallet"></i> Paid</span>
+        {% else %}
+        <span class="status-badge" style="background:#fff7ed;color:#92400e;margin-left:6px"><i class="fas fa-hourglass-half"></i> Awaiting Payment</span>
+        {% endif %}
+    </div>
+</div>
+            <div class="job-details">
+                <p><i class="fas fa-user"></i> {{ job.customer_name }}</p>
+                <p><i class="fas fa-phone"></i> {{ job.phone }}</p>
+                <p><i class="fas fa-calendar"></i> {{ job.booking_date }} • {{ job.booking_time }}</p>
+                <p><i class="fas fa-map-marker-alt"></i> {{ job.area }}{% if job.address %}<br><small style="margin-left:24px;color:var(--gray)">{{ job.address }}</small>{% endif %}</p>
+                <div class="job-price">₹{{ job.base_price or 0 }}</div>
+            </div>
+            <div class="job-actions">
+                {% if job.status == 'Assigned' %}
+                    <form method="POST"><input type="hidden" name="booking_id" value="{{ job.id }}"><input type="hidden" name="new_status" value="Arrived"><button type="submit" class="btn btn-primary"><i class="fas fa-location-dot"></i> Mark Arrived</button></form>
+                {% elif job.status == 'Arrived' %}
+                    <form method="POST"><input type="hidden" name="booking_id" value="{{ job.id }}"><input type="hidden" name="new_status" value="In Progress"><button type="submit" class="btn btn-primary"><i class="fas fa-play"></i> Start Work</button></form>
+                {% elif job.status == 'In Progress' %}
+                    <button type="button" class="btn btn-success" onclick="openModal('{{ job.id }}')"><i class="fas fa-check-circle"></i> Complete Job</button>
+                {% else %}
+                    <button class="btn btn-outline" disabled><i class="fas fa-lock"></i> {% if ps == 'Paid' %}Payment Received{% else %}Awaiting Customer Payment{% endif %}</button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state"><i class="fas fa-clipboard-list" style="font-size:40px;color:var(--gray);margin-bottom:12px;opacity:0.4"></i><h3>No active jobs</h3></div>
+    {% endif %}
+</div>
+
+<!-- Extra Charges Modal -->
+<div class="modal" id="extraModal">
+    <div class="modal-box">
+        <div class="modal-title">Complete Job & Add Extras</div>
+        <form method="POST" action="{{ url_for('worker_schedule') }}">
+            <input type="hidden" name="new_status" value="Completed">
+            <input type="hidden" name="booking_id" id="modalBookingId">
+            <div class="form-group"><label class="form-label">Extra Amount (₹) - Optional</label><input type="number" name="extra_charges" class="form-input" min="0" step="0.01" value="0"></div>
+            <div class="form-group"><label class="form-label">Reason / Note - Optional</label><textarea name="extra_note" class="form-input" rows="2" placeholder="e.g., Extra materials..."></textarea></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-success">Confirm Complete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openModal(id){document.getElementById('modalBookingId').value=id;document.getElementById('extraModal').classList.add('active')}
+function closeModal(){document.getElementById('extraModal').classList.remove('active')}
+document.getElementById('extraModal').addEventListener('click',function(e){if(e.target===this)closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+</script>
+</body>
+</html>

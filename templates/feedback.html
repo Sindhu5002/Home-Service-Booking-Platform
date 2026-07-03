@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share Experience | HomeServe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #f43f5e;
+            --dark: #0f172a;
+            --gray: #64748b;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            background-image: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%), 
+                              radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            color: var(--dark);
+        }
+
+        .wrapper { width: 100%; max-width: 600px; }
+
+        .main-card {
+            background: var(--white);
+            border-radius: 32px;
+            box-shadow: var(--shadow);
+            padding: 40px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .header { text-align: center; margin-bottom: 35px; }
+        .header h1 { 
+            font-size: 28px; 
+            font-weight: 800; 
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, var(--dark), var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .service-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: #f1f5f9;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--gray);
+            margin-top: 12px;
+        }
+
+        /* Stars Section */
+        .rating-container { text-align: center; margin-bottom: 40px; }
+        .stars { display: flex; justify-content: center; gap: 12px; }
+        .stars i {
+            font-size: 48px;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .stars i.active {
+            color: var(--warning);
+            transform: scale(1.1);
+            text-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+        }
+        .stars i:hover { transform: scale(1.2) rotate(5deg); }
+
+        /* Form Elements */
+        .section-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .optional { font-weight: 400; color: var(--gray); font-size: 12px; }
+
+        textarea, select, input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #f1f5f9;
+            border-radius: 16px;
+            font-family: inherit;
+            font-size: 15px;
+            background: #f8fafc;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Complaint Box Styles */
+        .complaint-box {
+            background: #fffcfc;
+            border: 2px dashed #fee2e2;
+            border-radius: 24px;
+            padding: 24px;
+            margin-top: 10px;
+        }
+        .complaint-box .section-label { color: var(--danger); }
+
+        .btn-submit {
+            width: 100%;
+            padding: 20px;
+            background: var(--dark);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .btn-submit:hover {
+            background: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* CENTERED TOAST MESSAGE */
+        .toast-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .toast-card {
+            background: white;
+            padding: 30px 50px;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            transform: scale(0.8);
+            opacity: 0;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .toast-overlay.active { display: flex; }
+        .toast-overlay.active .toast-card { transform: scale(1); opacity: 1; }
+        .toast-card i { font-size: 50px; color: var(--success); margin-bottom: 15px; }
+        .toast-card h2 { font-weight: 800; margin-bottom: 5px; }
+        .toast-card p { color: var(--gray); font-size: 14px; }
+
+        @media (max-width: 480px) {
+            .main-card { padding: 25px; }
+            .stars i { font-size: 36px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="main-card">
+        <div class="header">
+            <h1>Rate Your Experience</h1>
+            <div class="service-tag">
+                <i class="fas fa-wrench"></i> {{ booking.service_name|default('Home Service') }}
+            </div>
+        </div>
+
+        <form id="feedbackForm" action="{{ url_for('submit_feedback', booking_id=booking.id) }}" method="POST">
+            <input type="hidden" name="rating" id="ratingInput" value="0">
+            
+            <div class="rating-container">
+                <div class="stars" id="starContainer">
+                    <i class="far fa-star" data-val="1"></i>
+                    <i class="far fa-star" data-val="2"></i>
+                    <i class="far fa-star" data-val="3"></i>
+                    <i class="far fa-star" data-val="4"></i>
+                    <i class="far fa-star" data-val="5"></i>
+                </div>
+            </div>
+
+            <label class="section-label">
+                <i class="far fa-edit"></i> Write a review <span class="optional">(Optional)</span>
+            </label>
+            <textarea name="review" rows="3" placeholder="How was the service?"></textarea>
+
+            <div class="complaint-box">
+                <label class="section-label">
+                    <i class="fas fa-exclamation-circle"></i> Have a complaint? <span class="optional">(Optional)</span>
+                </label>
+                <select name="complaint_category">
+                    <option value="">Select issue type...</option>
+                    <option value="quality">Poor quality of work</option>
+                    <option value="behavior">Staff behavior issue</option>
+                    <option value="delay">Service delay</option>
+                    <option value="overcharge">Pricing issue</option>
+                </select>
+                <textarea name="complaint_description" rows="2" placeholder="Describe the issue in detail..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+                Submit Feedback <i class="fas fa-chevron-right"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Centered Success Message -->
+<div class="toast-overlay" id="successOverlay">
+    <div class="toast-card">
+        <i class="fas fa-check-circle"></i>
+        <h2>Thank You!</h2>
+        <p>Your feedback has been submitted successfully.</p>
+    </div>
+</div>
+
+<script>
+    const stars = document.querySelectorAll('#starContainer i');
+    const ratingInput = document.getElementById('ratingInput');
+
+    // Star Selection Logic
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const val = parseInt(this.dataset.val);
+            ratingInput.value = val;
+            
+            // Highlight stars
+            stars.forEach(s => {
+                const sVal = parseInt(s.dataset.val);
+                if(sVal <= val) {
+                    s.classList.replace('far', 'fas');
+                    s.classList.add('active');
+                } else {
+                    s.classList.replace('fas', 'far');
+                    s.classList.remove('active');
+                }
+            });
+
+            // Sparkle Effect
+            if(val >= 4) {
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#6366f1', '#10b981', '#f59e0b']
+                });
+            }
+        });
+    });
+
+    // Handle Form Submission
+    document.getElementById('feedbackForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        
+        // Simple Validation: Require a rating if no complaint is filled
+        if(ratingInput.value == "0" && !document.getElementsByName('complaint_category')[0].value) {
+            alert("Please provide a rating or a complaint.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Submitting...';
+
+        try {
+            const response = await fetch(e.target.action, {
+                method: 'POST',
+                body: new FormData(e.target),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await response.json();
+
+            if(data.success) {
+                // Show Centered Success Card
+                const overlay = document.getElementById('successOverlay');
+                overlay.classList.add('active');
+                
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+                }, 2500);
+            } else {
+                alert(data.error || "Submission failed");
+                btn.disabled = false;
+                btn.innerHTML = 'Submit Feedback <i class="fas fa-chevron-right"></i>';
+            }
+        } catch (err) {
+            console.error(err);
+            btn.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>

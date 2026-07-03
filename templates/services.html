@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Services</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+    :root {
+        --bg: #ffffff;
+        --primary: #6366f1;
+        --p-blue: #e0f2fe; --t-blue: #0369a1;
+        --p-orange: #ffedd5; --t-orange: #c2410c;
+        --p-green: #dcfce7; --t-green: #15803d;
+        --p-purple: #f3e8ff; --t-purple: #7e22ce;
+        --p-pink: #fce7f3; --t-pink: #be185d;
+        --p-cyan: #ecfeff; --t-cyan: #0891b2;
+        --p-yellow: #fef9c3; --t-yellow: #a16207;
+        --p-indigo: #e0e7ff; --t-indigo: #4338ca;
+    }
+
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: var(--bg);
+        margin: 0;
+        padding: 60px 0;
+        color: #111;
+    }
+
+    .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 25px;
+    }
+
+    header { text-align: center; margin-bottom: 70px; }
+    
+    h1 {
+        font-size: 3.2rem;
+        font-weight: 800;
+        letter-spacing: -2px;
+        margin-bottom: 20px;
+        background: linear-gradient(90deg, #111, #6366f1);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .search-container {
+        position: relative;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .search-bar {
+        width: 100%;
+        padding: 20px 30px 20px 60px;
+        border-radius: 100px;
+        border: 1px solid #eee;
+        background: #f9fafb;
+        font-size: 1.1rem;
+        transition: 0.4s cubic-bezier(0.2, 1, 0.2, 1);
+        outline: none;
+    }
+
+    .search-bar:focus {
+        background: #fff;
+        border-color: var(--primary);
+        box-shadow: 0 20px 40px rgba(99, 102, 241, 0.1);
+        transform: scale(1.03);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 25px; top: 50%;
+        transform: translateY(-50%);
+        color: var(--primary);
+        font-size: 1.2rem;
+    }
+
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 25px;
+    }
+
+    .service-card {
+        background: #fff;
+        border-radius: 35px;
+        padding: 30px 25px;
+        text-decoration: none;
+        color: inherit;
+        position: relative;
+        border: 1px solid #f1f5f9;
+        transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        overflow: hidden;
+    }
+
+    .service-card:hover {
+        transform: translateY(-15px);
+        box-shadow: 0 40px 70px -15px rgba(0,0,0,0.1);
+    }
+
+    /* ✅ NEW: Service Image Styling */
+    .service-image {
+        width: 100%;
+        height: 160px;
+        border-radius: 24px;
+        object-fit: cover;
+        margin-bottom: 20px;
+        transition: transform 0.4s ease;
+        background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    }
+
+    .service-card:hover .service-image {
+        transform: scale(1.05);
+    }
+
+    /* Fallback Icon Circle (if no image) */
+    .icon-circle {
+        width: 85px;
+        height: 85px;
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        margin-bottom: 25px;
+        transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .service-card:hover .icon-circle {
+        transform: scale(1.2) rotate(8deg);
+        border-radius: 50%;
+    }
+
+    /* Hide icon if image exists */
+    .service-card.has-image .icon-circle {
+        display: none;
+    }
+
+    /* FUZZY COLOR ASSIGNMENTS for fallback icons */
+    .service-card[data-name*="Plumb"] .icon-circle { background: var(--p-blue); color: var(--t-blue); }
+    .service-card[data-name*="Elect"] .icon-circle { background: var(--p-orange); color: var(--t-orange); }
+    .service-card[data-name*="Clean"] .icon-circle { background: var(--p-purple); color: var(--t-purple); }
+    .service-card[data-name*="AC"] .icon-circle, 
+    .service-card[data-name*="HVAC"] .icon-circle { background: var(--p-cyan); color: var(--t-cyan); }
+    .service-card[data-name*="Pest"] .icon-circle { background: var(--p-green); color: var(--t-green); }
+    .service-card[data-name*="Paint"] .icon-circle { background: var(--p-pink); color: var(--t-pink); }
+    .service-card[data-name*="Garden"] .icon-circle { background: var(--p-yellow); color: var(--t-yellow); }
+    .service-card[data-name*="Handy"] .icon-circle { background: var(--p-indigo); color: var(--t-indigo); }
+
+    .service-card h3 {
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin: 0 0 10px;
+    }
+
+    .service-card p {
+        font-size: 0.95rem;
+        color: #64748b;
+        line-height: 1.5;
+        flex-grow: 1;
+    }
+
+    .price-tag {
+        margin-top: 25px;
+        padding: 8px 20px;
+        background: #f8fafc;
+        border-radius: 100px;
+        font-weight: 700;
+        transition: 0.3s;
+    }
+
+    .service-card:hover .price-tag {
+        background: #111;
+        color: #fff;
+    }
+
+    /* Image load error fallback */
+    .image-error { display: none; }
+    .service-card.image-load-error .service-image { display: none; }
+    .service-card.image-load-error .icon-circle { display: flex; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>What can we help you with?</h1>
+            <div class="search-container">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="serviceSearch" class="search-bar" placeholder="Try 'AC repair' or 'Cleaning'...">
+            </div>
+        </header>
+
+        <div class="services-grid" id="servicesGrid">
+    {% for service in services %}
+    {% set service_type = service.name.lower() %}
+    <a href="{{ url_for('book', service_id=service.id) }}" 
+       class="service-card {% if service.image %}has-image{% endif %}" 
+       data-name="{{ service.name }}">
+        
+        <!-- ✅ Admin-Uploaded Image (if exists) -->
+        {% if service.image %}
+        <img src="{{ url_for('static', filename='uploads/services/' + service.image) }}" 
+             alt="{{ service.name }}" 
+             class="service-image"
+             onerror="this.parentElement.classList.add('image-load-error');">
+        {% endif %}
+        
+        <!-- ✅ Fallback Icon (if no image or image fails to load) -->
+        <div class="icon-circle">
+            {% if 'plumb' in service_type %}<i class="fa-solid fa-droplet"></i>
+            {% elif 'elect' in service_type %}<i class="fa-solid fa-bolt"></i>
+            {% elif 'clean' in service_type %}<i class="fa-solid fa-hands-bubbles"></i>
+            {% elif 'ac' in service_type or 'hvac' in service_type %}<i class="fa-solid fa-snowflake"></i>
+            {% elif 'pest' in service_type %}<i class="fa-solid fa-bug-slash"></i>
+            {% elif 'paint' in service_type %}<i class="fa-solid fa-paint-roller"></i>
+            {% elif 'garden' in service_type %}<i class="fa-solid fa-seedling"></i>
+            {% elif 'handy' in service_type %}<i class="fa-solid fa-hammer"></i>
+            {% else %}<i class="fa-solid fa-star"></i>{% endif %}
+        </div>
+        
+        <h3>{{ service.name }}</h3>
+        <p>{{ service.description }}</p>
+        <div class="price-tag">₹{{ service.price }} per visit</div>
+    </a>
+    {% endfor %}
+</div>
+    </div>
+    
+    <center>
+        <a style="text-decoration:none; color: black; font-size: 16px;" href="{{url_for('dashboard')}}">
+            ← Back To Dashboard
+        </a>
+    </center>
+
+    <script>
+        // Smooth Filter Logic
+        const searchInput = document.getElementById('serviceSearch');
+        const cards = document.querySelectorAll('.service-card');
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            cards.forEach(card => {
+                const text = card.innerText.toLowerCase();
+                card.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>
